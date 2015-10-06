@@ -14,7 +14,6 @@ import (
 )
 
 type Batch struct {
-	w     *Writer
 	batch *gorocksdb.WriteBatch
 }
 
@@ -30,12 +29,6 @@ func (b *Batch) Merge(key, val []byte) {
 	b.batch.Merge(key, val)
 }
 
-func (b *Batch) Execute() error {
-	wopts := defaultWriteOptions()
-	err := b.w.store.db.Write(wopts, b.batch)
-	return err
-}
-
-func (b *Batch) Close() error {
-	return nil
+func (b *Batch) Reset() {
+	b.batch.Clear()
 }

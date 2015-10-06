@@ -10,65 +10,55 @@
 package rocksdb
 
 import (
+	"bytes"
+
 	"github.com/tecbot/gorocksdb"
 )
 
 type Iterator struct {
 	store    *Store
 	iterator *gorocksdb.Iterator
+
+	prefix []byte
+	end    []byte
 }
 
-func newIterator(store *Store) *Iterator {
-	ropts := defaultReadOptions()
-	rv := Iterator{
-		store:    store,
-		iterator: store.db.NewIterator(ropts),
-	}
-	return &rv
+func (i *Iterator) Seek(key []byte) {
+	i.iterator.Seek(key)
 }
 
-func newIteratorWithSnapshot(store *Store, snapshot *gorocksdb.Snapshot) *Iterator {
-	options := defaultReadOptions()
-	options.SetSnapshot(snapshot)
-	rv := Iterator{
-		store:    store,
-		iterator: store.db.NewIterator(options),
-	}
-	return &rv
+func (i *Iterator) Next() {
+	i.iterator.Next()
 }
 
-func (ldi *Iterator) SeekFirst() {
-	ldi.iterator.SeekToFirst()
-}
-
-func (ldi *Iterator) Seek(key []byte) {
-	ldi.iterator.Seek(key)
-}
-
-func (ldi *Iterator) Next() {
-	ldi.iterator.Next()
-}
-
-func (ldi *Iterator) Current() ([]byte, []byte, bool) {
-	if ldi.Valid() {
-		return ldi.Key(), ldi.Value(), true
+func (i *Iterator) Current() ([]byte, []byte, bool) {
+	if i.Valid() {
+		return i.Key(), i.Value(), true
 	}
 	return nil, nil, false
 }
 
-func (ldi *Iterator) Key() []byte {
-	return ldi.iterator.Key().Data()
+func (i *Iterator) Key() []byte {
+	return i.iterator.Key().Data()
 }
 
-func (ldi *Iterator) Value() []byte {
-	return ldi.iterator.Value().Data()
+func (i *Iterator) Value() []byte {
+	return i.iterator.Value().Data()
 }
 
-func (ldi *Iterator) Valid() bool {
-	return ldi.iterator.Valid()
+func (i *Iterator) Valid() bool {
+	if !i.iterator.Valid() {
+		return false
+	} else if i.prefix != nil && !bytes.HasPrefix(i.iterator.Key().Data(), i.prefix) {
+		return false
+	} else if i.end != nil && bytes.Compare(i.iterator.Key().Data(), i.end) >= 0 {
+		return false
+	}
+
+	return true
 }
 
-func (ldi *Iterator) Close() error {
-	ldi.iterator.Close()
+func (i *Iterator) Close() error {
+	i.iterator.Close()
 	return nil
 }

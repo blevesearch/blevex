@@ -10,8 +10,6 @@
 package forestdb
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
 	"sync"
 
@@ -21,21 +19,20 @@ import (
 )
 
 const Name = "forestdb"
+const DefaultConcurrent = 10
 
 type Store struct {
-	path     string
-	config   *forestdb.Config
-	kvconfig *forestdb.KVStoreConfig
-	dbfile   *forestdb.File
-	dbkv     *forestdb.KVStore
-	writer   sync.Mutex
-	mo       store.MergeOperator
+	m      sync.RWMutex
+	path   string
+	kvpool *forestdb.KVPool
+	mo     store.MergeOperator
 }
 
-func New(path string, createIfMissing bool,
-	config map[string]interface{}) (*Store, error) {
-	if config == nil {
-		config = map[string]interface{}{}
+func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, error) {
+
+	path, ok := config["path"].(string)
+	if !ok {
+		return nil, fmt.Errorf("must specify path")
 	}
 
 	forestDBDefaultConfig := forestdb.DefaultConfig()
@@ -46,245 +43,62 @@ func New(path string, createIfMissing bool,
 		return nil, err
 	}
 
-	rv := Store{
-		path:     path,
-		config:   forestDBConfig,
-		kvconfig: forestdb.DefaultKVStoreConfig(),
+	kvconfig := forestdb.DefaultKVStoreConfig()
+	if cim, ok := config["create_if_missing"].(bool); ok && cim {
+		kvconfig.SetCreateIfMissing(true)
 	}
 
-	if createIfMissing {
-		rv.kvconfig.SetCreateIfMissing(true)
+	numConcurrent := DefaultConcurrent
+	if nc, ok := config["num_concurrent"].(float64); ok {
+		numConcurrent = int(nc)
+	}
+
+	kvpool, err := forestdb.NewKVPool(path, forestDBConfig, "default", kvconfig, numConcurrent)
+	if err != nil {
+		return nil, err
+	}
+
+	rv := Store{
+		path:   path,
+		mo:     mo,
+		kvpool: kvpool,
 	}
 
 	return &rv, nil
 }
 
-func (s *Store) Open() error {
-	var err error
-	s.dbfile, err = forestdb.Open(s.path, s.config)
-	if err != nil {
-		return err
-	}
-
-	s.dbkv, err = s.dbfile.OpenKVStoreDefault(s.kvconfig)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *Store) SetMergeOperator(mo store.MergeOperator) {
-	s.mo = mo
-}
-
-func (s *Store) get(key []byte) ([]byte, error) {
-	res, err := s.dbkv.GetKV(key)
-	if err != nil && err != forestdb.RESULT_KEY_NOT_FOUND {
-		return nil, err
-	}
-	return res, nil
-}
-
-func (s *Store) set(key, val []byte) error {
-	s.writer.Lock()
-	defer s.writer.Unlock()
-	return s.setlocked(key, val)
-}
-
-func (s *Store) setlocked(key, val []byte) error {
-	return s.dbkv.SetKV(key, val)
-}
-
-func (s *Store) delete(key []byte) error {
-	s.writer.Lock()
-	defer s.writer.Unlock()
-	return s.deletelocked(key)
-}
-
-func (s *Store) deletelocked(key []byte) error {
-	return s.dbkv.DeleteKV(key)
-}
-
-func (s *Store) commit() error {
-	return s.dbfile.Commit(forestdb.COMMIT_NORMAL)
-}
-
 func (s *Store) Close() error {
-	err := s.dbkv.Close()
-	if err != nil {
-		return err
-	}
-	return s.dbfile.Close()
-
-}
-
-func (ldbs *Store) iterator(key []byte) store.KVIterator {
-	rv := newIterator(ldbs)
-	rv.Seek(key)
-	return rv
+	return s.kvpool.Close()
 }
 
 func (s *Store) Reader() (store.KVReader, error) {
-	return newReader(s)
-}
-
-func (ldbs *Store) Writer() (store.KVWriter, error) {
-	return newWriter(ldbs)
-}
-
-func (s *Store) getSeqNum() (forestdb.SeqNum, error) {
-	dbinfo, err := s.dbkv.Info()
-	if err != nil {
-		return 0, err
-	}
-	return dbinfo.LastSeqNum(), nil
-}
-
-func (s *Store) newSnapshot() (*forestdb.KVStore, error) {
-	seqNum, err := s.getSeqNum()
-	if err != nil {
-		return nil, fmt.Errorf("error getting snapshot seqnum: %v", err)
-	}
-	snapshot, err := s.dbkv.SnapshotOpen(seqNum)
-	if err == forestdb.RESULT_NO_DB_INSTANCE {
-		checkAgainSeqNum, err := s.getSeqNum()
-		if err != nil {
-			return nil, fmt.Errorf("error getting snapshot seqnum again: %v", err)
-		}
-		return nil, fmt.Errorf("cannot open snapshot %v, checked again its %v, error: %v", seqNum, checkAgainSeqNum, err)
-	}
-	return snapshot, err
-}
-
-func (s *Store) GetRollbackID() ([]byte, error) {
-	seqNum, err := s.getSeqNum()
+	kvstore, err := s.kvpool.Get()
 	if err != nil {
 		return nil, err
 	}
-	buf := new(bytes.Buffer)
-	err = binary.Write(buf, binary.LittleEndian, seqNum)
+	// FIXME move -1 constant to goforestdb
+	snapshot, err := kvstore.SnapshotOpen(forestdb.SnapshotInmem)
 	if err != nil {
 		return nil, err
 	}
-	return buf.Bytes(), nil
+	return &Reader{
+		store:    s,
+		kvstore:  kvstore,
+		snapshot: snapshot,
+	}, nil
 }
 
-func (s *Store) RollbackTo(rollbackId []byte) error {
-	s.writer.Lock()
-	defer s.writer.Unlock()
-	buf := bytes.NewReader(rollbackId)
-	var seqNum forestdb.SeqNum
-	err := binary.Read(buf, binary.LittleEndian, &seqNum)
+func (s *Store) Writer() (store.KVWriter, error) {
+	kvstore, err := s.kvpool.Get()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	err = s.dbkv.Rollback(seqNum)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func StoreConstructor(config map[string]interface{}) (store.KVStore, error) {
-	path, ok := config["path"].(string)
-	if !ok {
-		return nil, fmt.Errorf("must specify path")
-	}
-	createIfMissing := false
-	cim, ok := config["create_if_missing"].(bool)
-	if ok {
-		createIfMissing = cim
-	}
-	return New(path, createIfMissing, config)
+	return &Writer{
+		store:   s,
+		kvstore: kvstore,
+	}, nil
 }
 
 func init() {
-	registry.RegisterKVStore(Name, StoreConstructor)
-}
-
-func applyConfig(c *forestdb.Config, config map[string]interface{}) (
-	*forestdb.Config, error) {
-
-	if v, exists := config["blockSize"].(float64); exists {
-		c.SetBlockSize(uint32(v))
-	}
-	if v, exists := config["bufferCacheSize"].(float64); exists {
-		c.SetBufferCacheSize(uint64(v))
-	}
-	if v, exists := config["chunkSize"].(float64); exists {
-		c.SetChunkSize(uint16(v))
-	}
-	if v, exists := config["cleanupCacheOnClose"].(bool); exists {
-		c.SetCleanupCacheOnClose(v)
-	}
-	if v, exists := config["compactionBufferSizeMax"].(float64); exists {
-		c.SetCompactionBufferSizeMax(uint32(v))
-	}
-	if v, exists := config["compactionMinimumFilesize"].(float64); exists {
-		c.SetCompactionMinimumFilesize(uint64(v))
-	}
-	if v, exists := config["compactionMode"].(string); exists {
-		switch v {
-		case "manual":
-			c.SetCompactionMode(forestdb.COMPACT_MANUAL)
-		case "auto":
-			c.SetCompactionMode(forestdb.COMPACT_AUTO)
-		default:
-			return nil, fmt.Errorf("Unknown compaction mode: %s", v)
-		}
-
-	}
-	if v, exists := config["compactionThreshold"].(float64); exists {
-		c.SetCompactionThreshold(uint8(v))
-	}
-	if v, exists := config["compactorSleepDuration"].(float64); exists {
-		c.SetCompactorSleepDuration(uint64(v))
-	}
-	if v, exists := config["compressDocumentBody"].(bool); exists {
-		c.SetCompressDocumentBody(v)
-	}
-	if v, exists := config["durabilityOpt"].(string); exists {
-		switch v {
-		case "none":
-			c.SetDurabilityOpt(forestdb.DRB_NONE)
-		case "odirect":
-			c.SetDurabilityOpt(forestdb.DRB_ODIRECT)
-		case "async":
-			c.SetDurabilityOpt(forestdb.DRB_ASYNC)
-		case "async_odirect":
-			c.SetDurabilityOpt(forestdb.DRB_ODIRECT_ASYNC)
-		default:
-			return nil, fmt.Errorf("Unknown durability option: %s", v)
-		}
-
-	}
-	if v, exists := config["openFlags"].(string); exists {
-		switch v {
-		case "create":
-			c.SetOpenFlags(forestdb.OPEN_FLAG_CREATE)
-		case "readonly":
-			c.SetOpenFlags(forestdb.OPEN_FLAG_RDONLY)
-		default:
-			return nil, fmt.Errorf("Unknown open flag: %s", v)
-		}
-	}
-	if v, exists := config["purgingInterval"].(float64); exists {
-		c.SetPurgingInterval(uint32(v))
-	}
-	if v, exists := config["seqTreeOpt"].(bool); exists {
-		if !v {
-			c.SetSeqTreeOpt(forestdb.SEQTREE_NOT_USE)
-		}
-	}
-	if v, exists := config["walFlushBeforeCommit"].(bool); exists {
-		c.SetWalFlushBeforeCommit(v)
-	}
-	if v, exists := config["walThreshold"].(float64); exists {
-		c.SetWalThreshold(uint64(v))
-	}
-	if v, exists := config["maxWriterLockProb"].(float64); exists {
-		c.SetMaxWriterLockProb(uint8(v))
-	}
-	return c, nil
+	registry.RegisterKVStore(Name, New)
 }

@@ -10,67 +10,57 @@
 package leveldb
 
 import (
+	"bytes"
+
 	"github.com/jmhodges/levigo"
 )
 
 type Iterator struct {
 	store    *Store
 	iterator *levigo.Iterator
+
+	prefix []byte
+	end    []byte
 }
 
-func newIterator(store *Store) *Iterator {
-	ropts := defaultReadOptions()
-	rv := Iterator{
-		store:    store,
-		iterator: store.db.NewIterator(ropts),
+func (i *Iterator) Seek(key []byte) {
+	if key == nil {
+		key = []byte{0}
 	}
-	ropts.Close()
-	return &rv
+	i.iterator.Seek(key)
 }
 
-func newIteratorWithSnapshot(store *Store, snapshot *levigo.Snapshot) *Iterator {
-	options := defaultReadOptions()
-	options.SetSnapshot(snapshot)
-	rv := Iterator{
-		store:    store,
-		iterator: store.db.NewIterator(options),
-	}
-	options.Close()
-	return &rv
+func (i *Iterator) Next() {
+	i.iterator.Next()
 }
 
-func (ldi *Iterator) SeekFirst() {
-	ldi.iterator.SeekToFirst()
-}
-
-func (ldi *Iterator) Seek(key []byte) {
-	ldi.iterator.Seek(key)
-}
-
-func (ldi *Iterator) Next() {
-	ldi.iterator.Next()
-}
-
-func (ldi *Iterator) Current() ([]byte, []byte, bool) {
-	if ldi.Valid() {
-		return ldi.Key(), ldi.Value(), true
+func (i *Iterator) Current() ([]byte, []byte, bool) {
+	if i.Valid() {
+		return i.Key(), i.Value(), true
 	}
 	return nil, nil, false
 }
 
-func (ldi *Iterator) Key() []byte {
-	return ldi.iterator.Key()
+func (i *Iterator) Key() []byte {
+	return i.iterator.Key()
 }
 
-func (ldi *Iterator) Value() []byte {
-	return ldi.iterator.Value()
+func (i *Iterator) Value() []byte {
+	return i.iterator.Value()
 }
 
-func (ldi *Iterator) Valid() bool {
-	return ldi.iterator.Valid()
+func (i *Iterator) Valid() bool {
+	if !i.iterator.Valid() {
+		return false
+	} else if i.prefix != nil && !bytes.HasPrefix(i.iterator.Key(), i.prefix) {
+		return false
+	} else if i.end != nil && bytes.Compare(i.iterator.Key(), i.end) >= 0 {
+		return false
+	}
+	return true
 }
 
-func (ldi *Iterator) Close() error {
-	ldi.iterator.Close()
+func (i *Iterator) Close() error {
+	i.iterator.Close()
 	return nil
 }

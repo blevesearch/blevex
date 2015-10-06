@@ -11,7 +11,6 @@ package rocksdb
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/blevesearch/bleve/index/store"
 	"github.com/blevesearch/bleve/registry"
@@ -21,16 +20,25 @@ import (
 const Name = "rocksdb"
 
 type Store struct {
-	path   string
-	opts   *gorocksdb.Options
-	db     *gorocksdb.DB
-	writer sync.Mutex
+	path string
+	opts *gorocksdb.Options
+	db   *gorocksdb.DB
 }
 
-func New(path string, config map[string]interface{}) (*Store, error) {
+func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, error) {
+
+	path, ok := config["path"].(string)
+	if !ok {
+		return nil, fmt.Errorf("must specify path")
+	}
+
 	rv := Store{
 		path: path,
 		opts: gorocksdb.NewDefaultOptions(),
+	}
+
+	if mo != nil {
+		rv.opts.SetMergeOperator(mo)
 	}
 
 	_, err := applyConfig(rv.opts, config)
@@ -38,135 +46,32 @@ func New(path string, config map[string]interface{}) (*Store, error) {
 		return nil, err
 	}
 
+	rv.db, err = gorocksdb.OpenDb(rv.opts, rv.path)
+	if err != nil {
+		return nil, err
+	}
+
 	return &rv, nil
 }
 
-func (ldbs *Store) Open() error {
-	var err error
-	ldbs.db, err = gorocksdb.OpenDb(ldbs.opts, ldbs.path)
-	if err != nil {
-		return err
-	}
+func (s *Store) Close() error {
+	s.db.Close()
 	return nil
 }
 
-func (ldbs *Store) SetMergeOperator(mo store.MergeOperator) {
-	ldbs.opts.SetMergeOperator(mo)
+func (s *Store) Reader() (store.KVReader, error) {
+	return &Reader{
+		store:    s,
+		snapshot: s.db.NewSnapshot(),
+	}, nil
 }
 
-func (ldbs *Store) get(key []byte) ([]byte, error) {
-	options := defaultReadOptions()
-	b, err := ldbs.db.Get(options, key)
-	return b.Data(), err
-}
-
-func (ldbs *Store) getWithSnapshot(key []byte, snapshot *gorocksdb.Snapshot) ([]byte, error) {
-	options := defaultReadOptions()
-	options.SetSnapshot(snapshot)
-	b, err := ldbs.db.Get(options, key)
-	return b.Data(), err
-}
-
-func (ldbs *Store) set(key, val []byte) error {
-	ldbs.writer.Lock()
-	defer ldbs.writer.Unlock()
-	return ldbs.setlocked(key, val)
-}
-
-func (ldbs *Store) setlocked(key, val []byte) error {
-	options := defaultWriteOptions()
-	err := ldbs.db.Put(options, key, val)
-	return err
-}
-
-func (ldbs *Store) delete(key []byte) error {
-	ldbs.writer.Lock()
-	defer ldbs.writer.Unlock()
-	return ldbs.deletelocked(key)
-}
-
-func (ldbs *Store) deletelocked(key []byte) error {
-	options := defaultWriteOptions()
-	err := ldbs.db.Delete(options, key)
-	return err
-}
-
-func (ldbs *Store) Close() error {
-	ldbs.db.Close()
-	return nil
-}
-
-func (ldbs *Store) iterator(key []byte) store.KVIterator {
-	rv := newIterator(ldbs)
-	rv.Seek(key)
-	return rv
-}
-
-func (ldbs *Store) Reader() (store.KVReader, error) {
-	return newReader(ldbs)
-}
-
-func (ldbs *Store) Writer() (store.KVWriter, error) {
-	return newWriter(ldbs)
-}
-
-func StoreConstructor(config map[string]interface{}) (store.KVStore, error) {
-	path, ok := config["path"].(string)
-	if !ok {
-		return nil, fmt.Errorf("must specify path")
-	}
-	return New(path, config)
+func (s *Store) Writer() (store.KVWriter, error) {
+	return &Writer{
+		store: s,
+	}, nil
 }
 
 func init() {
-	registry.RegisterKVStore(Name, StoreConstructor)
-}
-
-func applyConfig(o *gorocksdb.Options, config map[string]interface{}) (
-	*gorocksdb.Options, error) {
-
-	cim, ok := config["create_if_missing"].(bool)
-	if ok {
-		o.SetCreateIfMissing(cim)
-	}
-
-	eie, ok := config["error_if_exists"].(bool)
-	if ok {
-		o.SetErrorIfExists(eie)
-	}
-
-	wbs, ok := config["write_buffer_size"].(float64)
-	if ok {
-		o.SetWriteBufferSize(int(wbs))
-	}
-
-	mof, ok := config["max_open_files"].(float64)
-	if ok {
-		o.SetMaxOpenFiles(int(mof))
-	}
-
-	tt, ok := config["total_threads"].(float64)
-	if ok {
-		o.IncreaseParallelism(int(tt))
-	}
-
-	// options in the block based table options object
-	bbto := gorocksdb.NewDefaultBlockBasedTableOptions()
-
-	lcc, ok := config["lru_cache_capacity"].(float64)
-	if ok {
-		c := gorocksdb.NewLRUCache(int(lcc))
-		bbto.SetBlockCache(c)
-	}
-
-	bfbpk, ok := config["bloom_filter_bits_per_key"].(float64)
-	if ok {
-		bf := gorocksdb.NewBloomFilter(int(bfbpk))
-		bbto.SetFilterPolicy(bf)
-	}
-
-	// set the block based table options
-	o.SetBlockBasedTableFactory(bbto)
-
-	return o, nil
+	registry.RegisterKVStore(Name, New)
 }

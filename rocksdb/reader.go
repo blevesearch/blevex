@@ -19,25 +19,38 @@ type Reader struct {
 	snapshot *gorocksdb.Snapshot
 }
 
-func newReader(store *Store) (*Reader, error) {
-	return &Reader{
-		store:    store,
-		snapshot: store.db.NewSnapshot(),
-	}, nil
-}
-
-func (r *Reader) BytesSafeAfterClose() bool {
-	return false
-}
-
 func (r *Reader) Get(key []byte) ([]byte, error) {
-	return r.store.getWithSnapshot(key, r.snapshot)
+	options := defaultReadOptions()
+	options.SetSnapshot(r.snapshot)
+	b, err := r.store.db.Get(options, key)
+	if err != nil {
+		return nil, err
+	}
+	return b.Data(), err
 }
 
-func (r *Reader) Iterator(key []byte) store.KVIterator {
-	rv := newIteratorWithSnapshot(r.store, r.snapshot)
-	rv.Seek(key)
-	return rv
+func (r *Reader) PrefixIterator(prefix []byte) store.KVIterator {
+	options := defaultReadOptions()
+	options.SetSnapshot(r.snapshot)
+	rv := Iterator{
+		store:    r.store,
+		iterator: r.store.db.NewIterator(options),
+		prefix:   prefix,
+	}
+	rv.Seek(prefix)
+	return &rv
+}
+
+func (r *Reader) RangeIterator(start, end []byte) store.KVIterator {
+	options := defaultReadOptions()
+	options.SetSnapshot(r.snapshot)
+	rv := Iterator{
+		store:    r.store,
+		iterator: r.store.db.NewIterator(options),
+		end:      end,
+	}
+	rv.Seek(start)
+	return &rv
 }
 
 func (r *Reader) Close() error {

@@ -10,30 +10,14 @@
 package forestdb
 
 import (
-	"fmt"
-
 	"github.com/blevesearch/bleve/index/store"
 	"github.com/couchbase/goforestdb"
 )
 
 type Reader struct {
 	store    *Store
+	kvstore  *forestdb.KVStore
 	snapshot *forestdb.KVStore
-}
-
-func (r *Reader) BytesSafeAfterClose() bool {
-	return true
-}
-
-func newReader(store *Store) (*Reader, error) {
-	snapshot, err := store.newSnapshot()
-	if err != nil {
-		return nil, fmt.Errorf("error opening snapshot: %v", err)
-	}
-	return &Reader{
-		store:    store,
-		snapshot: snapshot,
-	}, nil
 }
 
 func (r *Reader) Get(key []byte) ([]byte, error) {
@@ -44,18 +28,46 @@ func (r *Reader) Get(key []byte) ([]byte, error) {
 	return res, nil
 }
 
-func (r *Reader) Iterator(key []byte) store.KVIterator {
-	rv := newIteratorWithSnapshot(r.store, r.snapshot)
-	rv.Seek(key)
-	return rv
+func (r *Reader) PrefixIterator(prefix []byte) store.KVIterator {
+	// compute range end
+	var end []byte
+	for i := len(prefix) - 1; i >= 0; i-- {
+		c := prefix[i]
+		if c < 0xff {
+			end = make([]byte, i+1)
+			copy(end, prefix)
+			end[i] = c + 1
+			break
+		}
+	}
+	itr, err := r.snapshot.IteratorInit(prefix, end, forestdb.ITR_NONE|forestdb.ITR_NO_DELETES)
+	rv := Iterator{
+		store:    r.store,
+		iterator: itr,
+		valid:    err == nil,
+	}
+	rv.Seek(prefix)
+	return &rv
 }
 
 func (r *Reader) RangeIterator(start, end []byte) store.KVIterator {
-	rv := newIteratorWithSnapshotAndRange(r.store, r.snapshot, start, end)
+	itr, err := r.snapshot.IteratorInit(start, end, forestdb.ITR_NONE|forestdb.ITR_NO_DELETES)
+	rv := Iterator{
+		store:    r.store,
+		iterator: itr,
+		valid:    err == nil,
+	}
 	rv.Seek(start)
-	return rv
+	return &rv
 }
 
-func (r *Reader) Close() error {
-	return r.snapshot.Close()
+func (r *Reader) Close() (rverr error) {
+	rverr = r.snapshot.Close()
+	//fixme review this
+	// return to pool even error closing snapshot?
+	err := r.store.kvpool.Return(r.kvstore)
+	if rverr == nil && err != nil {
+		rverr = err // return first error
+	}
+	return
 }

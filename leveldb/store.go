@@ -21,17 +21,24 @@ import (
 const Name = "leveldb"
 
 type Store struct {
-	path   string
-	opts   *levigo.Options
-	db     *levigo.DB
-	writer sync.Mutex
-	mo     store.MergeOperator
+	path string
+	opts *levigo.Options
+	db   *levigo.DB
+	mo   store.MergeOperator
+
+	mergeMutex sync.Mutex
 }
 
-func New(path string, config map[string]interface{}) (*Store, error) {
+func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, error) {
+	path, ok := config["path"].(string)
+	if !ok {
+		return nil, fmt.Errorf("must specify path")
+	}
+
 	rv := Store{
 		path: path,
 		opts: levigo.NewOptions(),
+		mo:   mo,
 	}
 
 	_, err := applyConfig(rv.opts, config)
@@ -39,134 +46,79 @@ func New(path string, config map[string]interface{}) (*Store, error) {
 		return nil, err
 	}
 
+	rv.db, err = levigo.Open(rv.path, rv.opts)
+	if err != nil {
+		return nil, err
+	}
 	return &rv, nil
 }
 
-func (ldbs *Store) Open() error {
-	var err error
-	ldbs.db, err = levigo.Open(ldbs.path, ldbs.opts)
-	if err != nil {
-		return err
-	}
+// func (ldbs *Store) get(key []byte) ([]byte, error) {
+// 	options := defaultReadOptions()
+// 	b, err := ldbs.db.Get(options, key)
+// 	options.Close()
+// 	return b, err
+// }
+
+// func (ldbs *Store) getWithSnapshot(key []byte, snapshot *levigo.Snapshot) ([]byte, error) {
+// 	options := defaultReadOptions()
+// 	options.SetSnapshot(snapshot)
+// 	b, err := ldbs.db.Get(options, key)
+// 	options.Close()
+// 	return b, err
+// }
+
+// func (ldbs *Store) set(key, val []byte) error {
+// 	ldbs.writer.Lock()
+// 	defer ldbs.writer.Unlock()
+// 	return ldbs.setlocked(key, val)
+// }
+
+// func (ldbs *Store) setlocked(key, val []byte) error {
+// 	options := defaultWriteOptions()
+// 	err := ldbs.db.Put(options, key, val)
+// 	options.Close()
+// 	return err
+// }
+
+// func (ldbs *Store) delete(key []byte) error {
+// 	ldbs.writer.Lock()
+// 	defer ldbs.writer.Unlock()
+// 	return ldbs.deletelocked(key)
+// }
+
+// func (ldbs *Store) deletelocked(key []byte) error {
+// 	options := defaultWriteOptions()
+// 	err := ldbs.db.Delete(options, key)
+// 	options.Close()
+// 	return err
+// }
+
+func (s *Store) Close() error {
+	s.db.Close()
+	s.opts.Close()
 	return nil
 }
 
-func (ldbs *Store) SetMergeOperator(mo store.MergeOperator) {
-	ldbs.mo = mo
+// func (ldbs *Store) iterator(key []byte) store.KVIterator {
+// 	rv := newIterator(ldbs)
+// 	rv.Seek(key)
+// 	return rv
+// }
+
+func (s *Store) Reader() (store.KVReader, error) {
+	return &Reader{
+		store:    s,
+		snapshot: s.db.NewSnapshot(),
+	}, nil
 }
 
-func (ldbs *Store) get(key []byte) ([]byte, error) {
-	options := defaultReadOptions()
-	b, err := ldbs.db.Get(options, key)
-	options.Close()
-	return b, err
-}
-
-func (ldbs *Store) getWithSnapshot(key []byte, snapshot *levigo.Snapshot) ([]byte, error) {
-	options := defaultReadOptions()
-	options.SetSnapshot(snapshot)
-	b, err := ldbs.db.Get(options, key)
-	options.Close()
-	return b, err
-}
-
-func (ldbs *Store) set(key, val []byte) error {
-	ldbs.writer.Lock()
-	defer ldbs.writer.Unlock()
-	return ldbs.setlocked(key, val)
-}
-
-func (ldbs *Store) setlocked(key, val []byte) error {
-	options := defaultWriteOptions()
-	err := ldbs.db.Put(options, key, val)
-	options.Close()
-	return err
-}
-
-func (ldbs *Store) delete(key []byte) error {
-	ldbs.writer.Lock()
-	defer ldbs.writer.Unlock()
-	return ldbs.deletelocked(key)
-}
-
-func (ldbs *Store) deletelocked(key []byte) error {
-	options := defaultWriteOptions()
-	err := ldbs.db.Delete(options, key)
-	options.Close()
-	return err
-}
-
-func (ldbs *Store) Close() error {
-	ldbs.db.Close()
-	ldbs.opts.Close()
-	return nil
-}
-
-func (ldbs *Store) iterator(key []byte) store.KVIterator {
-	rv := newIterator(ldbs)
-	rv.Seek(key)
-	return rv
-}
-
-func (ldbs *Store) Reader() (store.KVReader, error) {
-	return newReader(ldbs)
-}
-
-func (ldbs *Store) Writer() (store.KVWriter, error) {
-	return newWriter(ldbs)
-}
-
-func StoreConstructor(config map[string]interface{}) (store.KVStore, error) {
-	path, ok := config["path"].(string)
-	if !ok {
-		return nil, fmt.Errorf("must specify path")
-	}
-	return New(path, config)
+func (s *Store) Writer() (store.KVWriter, error) {
+	return &Writer{
+		store: s,
+	}, nil
 }
 
 func init() {
-	registry.RegisterKVStore(Name, StoreConstructor)
-}
-
-func applyConfig(o *levigo.Options, config map[string]interface{}) (
-	*levigo.Options, error) {
-
-	cim, ok := config["create_if_missing"].(bool)
-	if ok {
-		o.SetCreateIfMissing(cim)
-	}
-
-	eie, ok := config["error_if_exists"].(bool)
-	if ok {
-		o.SetErrorIfExists(eie)
-	}
-
-	wbs, ok := config["write_buffer_size"].(float64)
-	if ok {
-		o.SetWriteBufferSize(int(wbs))
-	}
-
-	bs, ok := config["block_size"].(float64)
-	if ok {
-		o.SetBlockSize(int(bs))
-	}
-
-	bri, ok := config["block_restart_interval"].(float64)
-	if ok {
-		o.SetBlockRestartInterval(int(bri))
-	}
-
-	lcc, ok := config["lru_cache_capacity"].(float64)
-	if ok {
-		lruCache := levigo.NewLRUCache(int(lcc))
-		o.SetCache(lruCache)
-	}
-
-	bfbpk, ok := config["bloom_filter_bits_per_key"].(float64)
-	if ok {
-		bf := levigo.NewBloomFilter(int(bfbpk))
-		o.SetFilterPolicy(bf)
-	}
-
-	return o, nil
+	registry.RegisterKVStore(Name, New)
 }

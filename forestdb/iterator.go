@@ -21,52 +21,10 @@ type Iterator struct {
 	valid    bool
 }
 
-func newIterator(store *Store) *Iterator {
-	itr, err := store.dbkv.IteratorInit([]byte{}, nil, forestdb.ITR_NONE)
-	rv := Iterator{
-		store:    store,
-		iterator: itr,
-		valid:    err == nil,
-	}
-	return &rv
-}
-
-func newIteratorWithSnapshot(store *Store, snapshot *forestdb.KVStore) *Iterator {
-	itr, err := snapshot.IteratorInit([]byte{}, nil, forestdb.ITR_NONE)
-	rv := Iterator{
-		store:    store,
-		iterator: itr,
-		valid:    err == nil,
-	}
-	return &rv
-}
-
-func newIteratorWithSnapshotAndRange(store *Store, snapshot *forestdb.KVStore, start, end []byte) *Iterator {
-	itr, err := snapshot.IteratorInit(start, end, forestdb.ITR_NONE)
-	rv := Iterator{
-		store:    store,
-		iterator: itr,
-		valid:    err == nil,
-	}
-	return &rv
-}
-
-func (i *Iterator) SeekFirst() {
-	err := i.iterator.SeekMin()
-	if err != nil {
-		i.valid = false
-		return
-	}
-	if i.curr != nil {
-		i.curr.Close()
-	}
-	i.curr, err = i.iterator.Get()
-	if err != nil {
-		i.valid = false
-	}
-}
-
 func (i *Iterator) Seek(key []byte) {
+	if key == nil {
+		key = []byte{0}
+	}
 	err := i.iterator.Seek(key, forestdb.FDB_ITR_SEEK_HIGHER)
 	if err != nil {
 		i.valid = false

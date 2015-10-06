@@ -12,6 +12,7 @@
 package cznicb
 
 import (
+	"bytes"
 	"errors"
 
 	"github.com/cznic/b"
@@ -19,31 +20,16 @@ import (
 
 var iteratorDoneErr = errors.New("iteratorDoneErr") // A sentinel value.
 
-type Iterator struct { // Assuming that iterators are used single-threaded.
+type Iterator struct {
 	s *Store
 	e *b.Enumerator
 
 	currK   interface{}
 	currV   interface{}
 	currErr error
-}
 
-func (i *Iterator) SeekFirst() {
-	i.currK = nil
-	i.currV = nil
-	i.currErr = nil
-
-	var err error
-	i.s.m.RLock()
-	i.e, err = i.s.t.SeekFirst()
-	i.s.m.RUnlock() // cannot defer, must unlock before Next
-	if err != nil {
-		i.currK = nil
-		i.currV = nil
-		i.currErr = iteratorDoneErr
-	}
-
-	i.Next()
+	prefix []byte
+	end    []byte
 }
 
 func (i *Iterator) Seek(k []byte) {
@@ -75,6 +61,11 @@ func (i *Iterator) Current() ([]byte, []byte, bool) {
 	if i.currErr == iteratorDoneErr ||
 		i.currK == nil ||
 		i.currV == nil {
+		return nil, nil, false
+	}
+	if i.prefix != nil && !bytes.HasPrefix(i.currK.([]byte), i.prefix) {
+		return nil, nil, false
+	} else if i.end != nil && bytes.Compare(i.currK.([]byte), i.end) >= 0 {
 		return nil, nil, false
 	}
 
