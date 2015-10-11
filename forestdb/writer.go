@@ -22,12 +22,17 @@ type Writer struct {
 }
 
 func (w *Writer) NewBatch() store.KVBatch {
-	return store.NewEmulatedBatch(w.store.mo)
+	rv := Batch{
+		w:     w,
+		merge: store.NewEmulatedMerge(w.store.mo),
+		batch: forestdb.NewKVBatch(),
+	}
+	return &rv
 }
 
-func (w *Writer) ExecuteBatch(batch store.KVBatch) error {
+func (w *Writer) ExecuteBatch(b store.KVBatch) error {
 
-	emulatedBatch, ok := batch.(*store.EmulatedBatch)
+	batch, ok := b.(*Batch)
 	if !ok {
 		return fmt.Errorf("wrong type of batch")
 	}
@@ -35,7 +40,7 @@ func (w *Writer) ExecuteBatch(batch store.KVBatch) error {
 	w.store.m.Lock()
 	defer w.store.m.Unlock()
 
-	for key, mergeOps := range emulatedBatch.Merger.Merges {
+	for key, mergeOps := range batch.merge.Merges {
 		k := []byte(key)
 		ob, err := w.kvstore.GetKV(k)
 		if err != nil && err != forestdb.RESULT_KEY_NOT_FOUND {
@@ -45,28 +50,10 @@ func (w *Writer) ExecuteBatch(batch store.KVBatch) error {
 		if !fullMergeOk {
 			return fmt.Errorf("merge operator returned failure")
 		}
-		err = w.kvstore.SetKV(k, mergedVal)
-		if err != nil {
-			return err
-		}
+		batch.Set(k, mergedVal)
 	}
 
-	for _, op := range emulatedBatch.Ops {
-		if op.V != nil {
-			err := w.kvstore.SetKV(op.K, op.V)
-			if err != nil {
-				return err
-			}
-		} else {
-			err := w.kvstore.DeleteKV(op.K)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	w.kvstore.File().Commit(forestdb.COMMIT_NORMAL)
-	return nil
+	return w.kvstore.ExecuteBatch(batch.batch, forestdb.COMMIT_NORMAL)
 }
 
 func (w *Writer) Close() error {

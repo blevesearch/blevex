@@ -76,7 +76,6 @@ func (s *Store) Reader() (store.KVReader, error) {
 	if err != nil {
 		return nil, err
 	}
-	// FIXME move -1 constant to goforestdb
 	snapshot, err := kvstore.SnapshotOpen(forestdb.SnapshotInmem)
 	if err != nil {
 		return nil, err
