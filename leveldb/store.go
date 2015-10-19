@@ -53,58 +53,11 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 	return &rv, nil
 }
 
-// func (ldbs *Store) get(key []byte) ([]byte, error) {
-// 	options := defaultReadOptions()
-// 	b, err := ldbs.db.Get(options, key)
-// 	options.Close()
-// 	return b, err
-// }
-
-// func (ldbs *Store) getWithSnapshot(key []byte, snapshot *levigo.Snapshot) ([]byte, error) {
-// 	options := defaultReadOptions()
-// 	options.SetSnapshot(snapshot)
-// 	b, err := ldbs.db.Get(options, key)
-// 	options.Close()
-// 	return b, err
-// }
-
-// func (ldbs *Store) set(key, val []byte) error {
-// 	ldbs.writer.Lock()
-// 	defer ldbs.writer.Unlock()
-// 	return ldbs.setlocked(key, val)
-// }
-
-// func (ldbs *Store) setlocked(key, val []byte) error {
-// 	options := defaultWriteOptions()
-// 	err := ldbs.db.Put(options, key, val)
-// 	options.Close()
-// 	return err
-// }
-
-// func (ldbs *Store) delete(key []byte) error {
-// 	ldbs.writer.Lock()
-// 	defer ldbs.writer.Unlock()
-// 	return ldbs.deletelocked(key)
-// }
-
-// func (ldbs *Store) deletelocked(key []byte) error {
-// 	options := defaultWriteOptions()
-// 	err := ldbs.db.Delete(options, key)
-// 	options.Close()
-// 	return err
-// }
-
 func (s *Store) Close() error {
 	s.db.Close()
 	s.opts.Close()
 	return nil
 }
-
-// func (ldbs *Store) iterator(key []byte) store.KVIterator {
-// 	rv := newIterator(ldbs)
-// 	rv.Seek(key)
-// 	return rv
-// }
 
 func (s *Store) Reader() (store.KVReader, error) {
 	return &Reader{
