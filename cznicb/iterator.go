@@ -29,10 +29,15 @@ type Iterator struct {
 	currErr error
 
 	prefix []byte
+	start  []byte
 	end    []byte
 }
 
 func (i *Iterator) Seek(k []byte) {
+	if bytes.Compare(k, i.start) < 0 {
+		k = i.start
+	}
+
 	i.currK = nil
 	i.currV = nil
 	i.currErr = nil

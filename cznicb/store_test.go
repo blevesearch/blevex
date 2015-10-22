@@ -72,6 +72,12 @@ func TestCznicbRangeIterator(t *testing.T) {
 	test.CommonTestRangeIterator(t, s)
 }
 
+func TestCznicbRangeIteratorSeek(t *testing.T) {
+	s := open(t, nil)
+	defer cleanup(t, s)
+	test.CommonTestRangeIteratorSeek(t, s)
+}
+
 func TestCznicbMerge(t *testing.T) {
 	s := open(t, &test.TestMergeCounter{})
 	defer cleanup(t, s)

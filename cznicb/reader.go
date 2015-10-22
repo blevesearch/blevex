@@ -43,9 +43,10 @@ func (r *Reader) PrefixIterator(prefix []byte) store.KVIterator {
 func (r *Reader) RangeIterator(start, end []byte) store.KVIterator {
 	e, _ := r.s.t.SeekFirst()
 	rv := Iterator{
-		s:   r.s,
-		e:   e,
-		end: end,
+		s:     r.s,
+		e:     e,
+		start: start,
+		end:   end,
 	}
 	rv.Seek(start)
 	return &rv
