@@ -75,6 +75,12 @@ func TestRocksDBRangeIterator(t *testing.T) {
 	test.CommonTestRangeIterator(t, s)
 }
 
+func TestRocksDBRangeIteratorSeek(t *testing.T) {
+	s := open(t, nil)
+	defer cleanup(t, s)
+	test.CommonTestRangeIteratorSeek(t, s)
+}
+
 func TestRocksDBMerge(t *testing.T) {
 	s := open(t, &test.TestMergeCounter{})
 	defer cleanup(t, s)

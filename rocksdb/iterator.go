@@ -20,10 +20,14 @@ type Iterator struct {
 	iterator *gorocksdb.Iterator
 
 	prefix []byte
+	start  []byte
 	end    []byte
 }
 
 func (i *Iterator) Seek(key []byte) {
+	if bytes.Compare(key, i.start) < 0 {
+		key = i.start
+	}
 	i.iterator.Seek(key)
 }
 
