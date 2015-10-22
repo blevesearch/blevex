@@ -20,12 +20,16 @@ type Iterator struct {
 	iterator *levigo.Iterator
 
 	prefix []byte
+	start  []byte
 	end    []byte
 }
 
 func (i *Iterator) Seek(key []byte) {
 	if key == nil {
 		key = []byte{0}
+	}
+	if bytes.Compare(key, i.start) < 0 {
+		key = i.start
 	}
 	i.iterator.Seek(key)
 }

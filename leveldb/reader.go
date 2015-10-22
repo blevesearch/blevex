@@ -46,6 +46,7 @@ func (r *Reader) RangeIterator(start, end []byte) store.KVIterator {
 	rv := Iterator{
 		store:    r.store,
 		iterator: r.store.db.NewIterator(options),
+		start:    start,
 		end:      end,
 	}
 	options.Close()
