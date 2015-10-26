@@ -45,6 +45,7 @@ func (r *Reader) PrefixIterator(prefix []byte) store.KVIterator {
 		store:    r.store,
 		iterator: itr,
 		valid:    err == nil,
+		start:    prefix,
 	}
 	rv.Seek(prefix)
 	return &rv
