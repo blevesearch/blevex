@@ -40,7 +40,7 @@ func (r *Reader) PrefixIterator(prefix []byte) store.KVIterator {
 			break
 		}
 	}
-	itr, err := r.snapshot.IteratorInit(prefix, end, forestdb.ITR_NONE|forestdb.ITR_NO_DELETES)
+	itr, err := r.snapshot.IteratorInit(prefix, end, forestdb.ITR_NO_DELETES|forestdb.FDB_ITR_SKIP_MAX_KEY)
 	rv := Iterator{
 		store:    r.store,
 		iterator: itr,
@@ -51,11 +51,16 @@ func (r *Reader) PrefixIterator(prefix []byte) store.KVIterator {
 }
 
 func (r *Reader) RangeIterator(start, end []byte) store.KVIterator {
-	itr, err := r.snapshot.IteratorInit(start, end, forestdb.ITR_NONE|forestdb.ITR_NO_DELETES)
+	opts := forestdb.ITR_NO_DELETES
+	if end != nil {
+		opts = opts | forestdb.FDB_ITR_SKIP_MAX_KEY
+	}
+	itr, err := r.snapshot.IteratorInit(start, end, opts)
 	rv := Iterator{
 		store:    r.store,
 		iterator: itr,
 		valid:    err == nil,
+		start:    start,
 	}
 	rv.Seek(start)
 	return &rv

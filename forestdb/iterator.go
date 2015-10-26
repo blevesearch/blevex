@@ -10,6 +10,8 @@
 package forestdb
 
 import (
+	"bytes"
+
 	"github.com/couchbase/goforestdb"
 )
 
@@ -19,16 +21,22 @@ type Iterator struct {
 	iterator *forestdb.Iterator
 	curr     *forestdb.Doc
 	valid    bool
+	start    []byte
 }
 
 func (i *Iterator) Seek(key []byte) {
 	if key == nil {
 		key = []byte{0}
 	}
+	if i.start != nil && bytes.Compare(key, i.start) < 0 {
+		key = i.start
+	}
 	err := i.iterator.Seek(key, forestdb.FDB_ITR_SEEK_HIGHER)
 	if err != nil {
 		i.valid = false
 		return
+	} else {
+		i.valid = true // seek can make invalid iterator valid again
 	}
 	if i.curr != nil {
 		i.curr.Close()
