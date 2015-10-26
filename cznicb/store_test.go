@@ -66,6 +66,12 @@ func TestCznicbPrefixIterator(t *testing.T) {
 	test.CommonTestPrefixIterator(t, s)
 }
 
+func TestCznicbPrefixIteratorSeek(t *testing.T) {
+	s := open(t, nil)
+	defer cleanup(t, s)
+	test.CommonTestPrefixIteratorSeek(t, s)
+}
+
 func TestCznicbRangeIterator(t *testing.T) {
 	s := open(t, nil)
 	defer cleanup(t, s)

@@ -34,8 +34,25 @@ type Iterator struct {
 }
 
 func (i *Iterator) Seek(k []byte) {
-	if bytes.Compare(k, i.start) < 0 {
+	if i.start != nil && bytes.Compare(k, i.start) < 0 {
 		k = i.start
+	}
+	if i.prefix != nil && !bytes.HasPrefix(k, i.prefix) {
+		if bytes.Compare(k, i.prefix) < 0 {
+			k = i.prefix
+		} else {
+			var end []byte
+			for x := len(i.prefix) - 1; x >= 0; x-- {
+				c := i.prefix[x]
+				if c < 0xff {
+					end = make([]byte, x+1)
+					copy(end, i.prefix)
+					end[x] = c + 1
+					break
+				}
+			}
+			k = end
+		}
 	}
 
 	i.currK = nil
