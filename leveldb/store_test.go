@@ -69,6 +69,12 @@ func TestLevelDBPrefixIterator(t *testing.T) {
 	test.CommonTestPrefixIterator(t, s)
 }
 
+func TestLevelDBPrefixIteratorSeek(t *testing.T) {
+	s := open(t, nil)
+	defer cleanup(t, s)
+	test.CommonTestPrefixIteratorSeek(t, s)
+}
+
 func TestLevelDBRangeIterator(t *testing.T) {
 	s := open(t, nil)
 	defer cleanup(t, s)

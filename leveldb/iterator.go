@@ -28,8 +28,25 @@ func (i *Iterator) Seek(key []byte) {
 	if key == nil {
 		key = []byte{0}
 	}
-	if bytes.Compare(key, i.start) < 0 {
+	if i.start != nil && bytes.Compare(key, i.start) < 0 {
 		key = i.start
+	}
+	if i.prefix != nil && !bytes.HasPrefix(key, i.prefix) {
+		if bytes.Compare(key, i.prefix) < 0 {
+			key = i.prefix
+		} else {
+			var end []byte
+			for x := len(i.prefix) - 1; x >= 0; x-- {
+				c := i.prefix[x]
+				if c < 0xff {
+					end = make([]byte, x+1)
+					copy(end, i.prefix)
+					end[x] = c + 1
+					break
+				}
+			}
+			key = end
+		}
 	}
 	i.iterator.Seek(key)
 }
