@@ -22,6 +22,7 @@ type Iterator struct {
 	curr     *forestdb.Doc
 	valid    bool
 	start    []byte
+	end      []byte
 }
 
 func (i *Iterator) Seek(key []byte) {
@@ -43,6 +44,11 @@ func (i *Iterator) Seek(key []byte) {
 	}
 	i.curr, err = i.iterator.Get()
 	if err != nil {
+		i.valid = false
+		return
+	}
+	if bytes.Compare(i.curr.Key(), i.end) >= 0 {
+		// should never happen, workaround for MB-16963
 		i.valid = false
 		return
 	}

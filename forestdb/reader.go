@@ -46,6 +46,7 @@ func (r *Reader) PrefixIterator(prefix []byte) store.KVIterator {
 		iterator: itr,
 		valid:    err == nil,
 		start:    prefix,
+		end:      end,
 	}
 	rv.Seek(prefix)
 	return &rv
@@ -62,6 +63,7 @@ func (r *Reader) RangeIterator(start, end []byte) store.KVIterator {
 		iterator: itr,
 		valid:    err == nil,
 		start:    start,
+		end:      end,
 	}
 	rv.Seek(start)
 	return &rv
