@@ -35,6 +35,7 @@ func (w *Writer) ExecuteBatch(b store.KVBatch) error {
 
 	wopts := defaultWriteOptions()
 	err := w.store.db.Write(wopts, batch.batch)
+	wopts.Destroy()
 	return err
 }
 
