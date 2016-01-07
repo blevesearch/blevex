@@ -21,6 +21,7 @@ type Reader struct {
 
 func (r *Reader) Get(key []byte) ([]byte, error) {
 	options := defaultReadOptions()
+	defer options.Destroy()
 	options.SetSnapshot(r.snapshot)
 	b, err := r.store.db.Get(options, key)
 	if err != nil {
@@ -38,6 +39,7 @@ func (r *Reader) PrefixIterator(prefix []byte) store.KVIterator {
 		prefix:   prefix,
 	}
 	rv.Seek(prefix)
+	options.Destroy()
 	return &rv
 }
 
@@ -51,6 +53,7 @@ func (r *Reader) RangeIterator(start, end []byte) store.KVIterator {
 		end:      end,
 	}
 	rv.Seek(start)
+	options.Destroy()
 	return &rv
 }
 
