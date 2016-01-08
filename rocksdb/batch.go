@@ -32,3 +32,10 @@ func (b *Batch) Merge(key, val []byte) {
 func (b *Batch) Reset() {
 	b.batch.Clear()
 }
+
+func (b *Batch) Close() error {
+	b.batch.Destroy()
+	b.batch = nil
+	return nil
+}
+
