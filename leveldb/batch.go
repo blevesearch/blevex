@@ -36,3 +36,11 @@ func (b *Batch) Reset() {
 	b.batch.Clear()
 	b.merge = store.NewEmulatedMerge(b.w.store.mo)
 }
+
+func (b *Batch) Close() error {
+	b.batch.Close()
+	b.batch = nil
+	b.merge = nil
+	return nil
+}
+
