@@ -60,15 +60,20 @@ func (s *Store) Close() error {
 }
 
 func (s *Store) Reader() (store.KVReader, error) {
+	snapshot := s.db.NewSnapshot()
+	options := defaultReadOptions()
+	options.SetSnapshot(snapshot)
 	return &Reader{
 		store:    s,
 		snapshot: s.db.NewSnapshot(),
+		options:  options,
 	}, nil
 }
 
 func (s *Store) Writer() (store.KVWriter, error) {
 	return &Writer{
-		store: s,
+		store:   s,
+		options: defaultWriteOptions(),
 	}, nil
 }
 

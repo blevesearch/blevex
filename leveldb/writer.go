@@ -17,7 +17,8 @@ import (
 )
 
 type Writer struct {
-	store *Store
+	store   *Store
+	options *levigo.WriteOptions
 }
 
 func (w *Writer) NewBatch() store.KVBatch {
@@ -60,13 +61,12 @@ func (w *Writer) ExecuteBatch(b store.KVBatch) error {
 		batch.Set(k, mergedVal)
 	}
 
-	wopts := defaultWriteOptions()
-	defer wopts.Close()
-	err := w.store.db.Write(wopts, batch.batch)
+	err := w.store.db.Write(w.options, batch.batch)
 	return err
 
 }
 
 func (w *Writer) Close() error {
+	w.options.Close()
 	return nil
 }

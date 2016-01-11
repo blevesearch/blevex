@@ -17,7 +17,8 @@ import (
 )
 
 type Writer struct {
-	store *Store
+	store   *Store
+	options *gorocksdb.WriteOptions
 }
 
 func (w *Writer) NewBatch() store.KVBatch {
@@ -33,12 +34,11 @@ func (w *Writer) ExecuteBatch(b store.KVBatch) error {
 		return fmt.Errorf("wrong type of batch")
 	}
 
-	wopts := defaultWriteOptions()
-	err := w.store.db.Write(wopts, batch.batch)
-	wopts.Destroy()
+	err := w.store.db.Write(w.options, batch.batch)
 	return err
 }
 
 func (w *Writer) Close() error {
+	w.options.Destroy()
 	return nil
 }

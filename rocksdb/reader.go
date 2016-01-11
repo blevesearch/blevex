@@ -17,13 +17,11 @@ import (
 type Reader struct {
 	store    *Store
 	snapshot *gorocksdb.Snapshot
+	options  *gorocksdb.ReadOptions
 }
 
 func (r *Reader) Get(key []byte) ([]byte, error) {
-	options := defaultReadOptions()
-	defer options.Destroy()
-	options.SetSnapshot(r.snapshot)
-	b, err := r.store.db.Get(options, key)
+	b, err := r.store.db.Get(r.options, key)
 	if err != nil {
 		return nil, err
 	}
@@ -31,33 +29,28 @@ func (r *Reader) Get(key []byte) ([]byte, error) {
 }
 
 func (r *Reader) PrefixIterator(prefix []byte) store.KVIterator {
-	options := defaultReadOptions()
-	options.SetSnapshot(r.snapshot)
 	rv := Iterator{
 		store:    r.store,
-		iterator: r.store.db.NewIterator(options),
+		iterator: r.store.db.NewIterator(r.options),
 		prefix:   prefix,
 	}
 	rv.Seek(prefix)
-	options.Destroy()
 	return &rv
 }
 
 func (r *Reader) RangeIterator(start, end []byte) store.KVIterator {
-	options := defaultReadOptions()
-	options.SetSnapshot(r.snapshot)
 	rv := Iterator{
 		store:    r.store,
-		iterator: r.store.db.NewIterator(options),
+		iterator: r.store.db.NewIterator(r.options),
 		start:    start,
 		end:      end,
 	}
 	rv.Seek(start)
-	options.Destroy()
 	return &rv
 }
 
 func (r *Reader) Close() error {
+	r.options.Destroy()
 	r.snapshot.Release()
 	return nil
 }

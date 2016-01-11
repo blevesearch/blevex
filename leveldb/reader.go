@@ -17,44 +17,37 @@ import (
 type Reader struct {
 	store    *Store
 	snapshot *levigo.Snapshot
+	options  *levigo.ReadOptions
 }
 
 func (r *Reader) Get(key []byte) ([]byte, error) {
-	options := defaultReadOptions()
-	options.SetSnapshot(r.snapshot)
-	b, err := r.store.db.Get(options, key)
-	options.Close()
+	b, err := r.store.db.Get(r.options, key)
 	return b, err
 }
 
 func (r *Reader) PrefixIterator(prefix []byte) store.KVIterator {
-	options := defaultReadOptions()
-	options.SetSnapshot(r.snapshot)
 	rv := Iterator{
 		store:    r.store,
-		iterator: r.store.db.NewIterator(options),
+		iterator: r.store.db.NewIterator(r.options),
 		prefix:   prefix,
 	}
-	options.Close()
 	rv.Seek(prefix)
 	return &rv
 }
 
 func (r *Reader) RangeIterator(start, end []byte) store.KVIterator {
-	options := defaultReadOptions()
-	options.SetSnapshot(r.snapshot)
 	rv := Iterator{
 		store:    r.store,
-		iterator: r.store.db.NewIterator(options),
+		iterator: r.store.db.NewIterator(r.options),
 		start:    start,
 		end:      end,
 	}
-	options.Close()
 	rv.Seek(start)
 	return &rv
 }
 
 func (r *Reader) Close() error {
+	r.options.Close()
 	r.store.db.ReleaseSnapshot(r.snapshot)
 	return nil
 }
