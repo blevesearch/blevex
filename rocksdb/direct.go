@@ -57,6 +57,7 @@ import "C"
 
 import (
 	"errors"
+	"reflect"
 	"unsafe"
 
 	"github.com/blevesearch/bleve/index/store"
@@ -159,4 +160,69 @@ func (s *Store) ExecuteDirectBatch(
 	}
 
 	return nil
+}
+
+func (s *Store) MultiGet(keysIn [][]byte) ([][]byte, error) {
+	keys := make([]*C.char, len(keysIn))
+	key_lens := make([]C.size_t, len(keysIn))
+	vals := make([]*C.char, len(keysIn))
+	val_lens := make([]C.size_t, len(keysIn))
+	errs := make([]*C.char, len(keysIn))
+
+	for i, key := range keysIn {
+		keys[i] = (*C.char)(unsafe.Pointer(&key[0]))
+		key_lens[i] = (C.size_t)(len(key))
+	}
+
+	options := C.rocksdb_readoptions_create()
+
+	C.rocksdb_multi_get(
+		(*C.rocksdb_t)(s.db.UnsafeGetDB()),
+		options,
+		(C.size_t)(len(keys)),
+		(**C.char)(unsafe.Pointer(&keys[0])),
+		(*C.size_t)(unsafe.Pointer(&key_lens[0])),
+		(**C.char)(unsafe.Pointer(&vals[0])),
+		(*C.size_t)(unsafe.Pointer(&val_lens[0])),
+		(**C.char)(unsafe.Pointer(&errs[0])))
+
+	C.rocksdb_readoptions_destroy(options)
+
+	defer func() {
+		for _, val := range vals {
+			if val != nil {
+				C.free(unsafe.Pointer(val))
+			}
+		}
+
+		for _, err := range errs {
+			if err != nil {
+				C.free(unsafe.Pointer(err))
+			}
+		}
+	}()
+
+	valsOut := make([][]byte, len(vals))
+
+	for i, val := range vals {
+		if errs[i] != nil {
+			return nil, errors.New(C.GoString(errs[i]))
+		}
+
+		if val != nil {
+			valsOut[i] = append([]byte(nil), charToByte(val, val_lens[i])...)
+		}
+	}
+
+	return valsOut, nil
+}
+
+// From github.com/tecbot/gorocksdb.
+func charToByte(data *C.char, len C.size_t) []byte {
+	var value []byte
+
+	sH := (*reflect.SliceHeader)(unsafe.Pointer(&value))
+	sH.Cap, sH.Len, sH.Data = int(len), int(len), uintptr(unsafe.Pointer(data))
+
+	return value
 }
