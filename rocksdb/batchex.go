@@ -63,13 +63,15 @@ import "C"
 
 import (
 	"errors"
+	"reflect"
 	"unsafe"
 
 	"github.com/blevesearch/bleve/index/store"
 )
 
 type BatchEx struct {
-	buf []byte
+	cbuf unsafe.Pointer
+	buf  []byte
 
 	num_sets       int
 	set_keys       []*C.char
@@ -89,8 +91,11 @@ type BatchEx struct {
 }
 
 func newBatchEx(options store.KVBatchOptions) *BatchEx {
+	cbuf := C.malloc(C.size_t(options.TotalBytes))
+
 	return &BatchEx{
-		buf:               make([]byte, options.TotalBytes),
+		cbuf:              cbuf,
+		buf:               charToByte(cbuf, options.TotalBytes),
 		set_keys:          make([]*C.char, options.NumSets),
 		set_keys_sizes:    make([]C.size_t, options.NumSets),
 		set_vals:          make([]*C.char, options.NumSets),
@@ -134,6 +139,10 @@ func (b *BatchEx) Reset() {
 
 func (b *BatchEx) Close() error {
 	b.Reset()
+
+	C.free(b.cbuf)
+
+	b.cbuf = nil
 	b.buf = nil
 	b.set_keys = nil
 	b.set_keys_sizes = nil
@@ -145,6 +154,7 @@ func (b *BatchEx) Close() error {
 	b.merge_keys_sizes = nil
 	b.merge_vals = nil
 	b.merge_vals_sizes = nil
+
 	return nil
 }
 
@@ -209,4 +219,14 @@ func (b *BatchEx) execute(w *Writer) error {
 	}
 
 	return nil
+}
+
+// Originally from github.com/tecbot/gorocksdb/util.go.
+func charToByte(data unsafe.Pointer, len int) []byte {
+	var value []byte
+
+	sH := (*reflect.SliceHeader)(unsafe.Pointer(&value))
+	sH.Cap, sH.Len, sH.Data = len, len, uintptr(data)
+
+	return value
 }
