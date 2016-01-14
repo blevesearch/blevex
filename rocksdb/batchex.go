@@ -58,6 +58,18 @@ char *blevex_rocksdb_execute_direct_batch(
 
     return errMsg;
 }
+
+void blevex_rocksdb_alloc_direct_batch(size_t totalBytes, size_t n, void **out) {
+    out[0] = malloc(totalBytes);
+    out[1] = malloc(n * sizeof(char *));
+    out[2] = malloc(n * sizeof(size_t));
+}
+
+void blevex_rocksdb_free_direct_batch(void **bufs) {
+    free(bufs[0]);
+    free(bufs[1]);
+    free(bufs[2]);
+}
 */
 import "C"
 
@@ -70,8 +82,8 @@ import (
 )
 
 type BatchEx struct {
-	cbuf unsafe.Pointer
-	buf  []byte
+	cbufs []unsafe.Pointer
+	buf   []byte
 
 	num_sets       int
 	set_keys       []*C.char
@@ -91,21 +103,24 @@ type BatchEx struct {
 }
 
 func newBatchEx(o store.KVBatchOptions) *BatchEx {
-	cbuf := C.malloc(C.size_t(o.TotalBytes))
-
 	s := o.NumSets
 	ss := s + o.NumSets
 	ssd := ss + o.NumDeletes
 	ssdm := ssd + o.NumMerges
 	ssdmm := ssdm + o.NumMerges
 
-	arr_ptr_char := make([]*C.char, ssdmm)
+	cbufs := make([]unsafe.Pointer, 3)
 
-	arr_size_t := make([]C.size_t, ssdmm)
+	C.blevex_rocksdb_alloc_direct_batch(C.size_t(o.TotalBytes),
+		C.size_t(ssdmm), (*unsafe.Pointer)(&cbufs[0]))
+
+	buf := unsafeToByteSlice(cbufs[0], o.TotalBytes)
+	arr_ptr_char := unsafeToCPtrCharSlice(cbufs[1], ssdmm)
+	arr_size_t := unsafeToCSizeTSlice(cbufs[2], ssdmm)
 
 	return &BatchEx{
-		cbuf:              cbuf,
-		buf:               charToByte(cbuf, o.TotalBytes),
+		cbufs:             cbufs,
+		buf:               buf,
 		set_keys:          arr_ptr_char[0:s],
 		set_keys_sizes:    arr_size_t[0:s],
 		set_vals:          arr_ptr_char[s:ss],
@@ -150,9 +165,9 @@ func (b *BatchEx) Reset() {
 func (b *BatchEx) Close() error {
 	b.Reset()
 
-	C.free(b.cbuf)
+	C.blevex_rocksdb_free_direct_batch((*unsafe.Pointer)(&b.cbufs[0]))
 
-	b.cbuf = nil
+	b.cbufs = nil
 	b.buf = nil
 	b.set_keys = nil
 	b.set_keys_sizes = nil
@@ -232,8 +247,26 @@ func (b *BatchEx) execute(w *Writer) error {
 }
 
 // Originally from github.com/tecbot/gorocksdb/util.go.
-func charToByte(data unsafe.Pointer, len int) []byte {
+func unsafeToByteSlice(data unsafe.Pointer, len int) []byte {
 	var value []byte
+
+	sH := (*reflect.SliceHeader)(unsafe.Pointer(&value))
+	sH.Cap, sH.Len, sH.Data = len, len, uintptr(data)
+
+	return value
+}
+
+func unsafeToCPtrCharSlice(data unsafe.Pointer, len int) []*C.char {
+	var value []*C.char
+
+	sH := (*reflect.SliceHeader)(unsafe.Pointer(&value))
+	sH.Cap, sH.Len, sH.Data = len, len, uintptr(data)
+
+	return value
+}
+
+func unsafeToCSizeTSlice(data unsafe.Pointer, len int) []C.size_t {
+	var value []C.size_t
 
 	sH := (*reflect.SliceHeader)(unsafe.Pointer(&value))
 	sH.Cap, sH.Len, sH.Data = len, len, uintptr(data)
