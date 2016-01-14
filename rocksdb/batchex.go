@@ -90,22 +90,32 @@ type BatchEx struct {
 	merge_vals_sizes []C.size_t
 }
 
-func newBatchEx(options store.KVBatchOptions) *BatchEx {
-	cbuf := C.malloc(C.size_t(options.TotalBytes))
+func newBatchEx(o store.KVBatchOptions) *BatchEx {
+	cbuf := C.malloc(C.size_t(o.TotalBytes))
+
+	s := o.NumSets
+	ss := s + o.NumSets
+	ssd := ss + o.NumDeletes
+	ssdm := ssd + o.NumMerges
+	ssdmm := ssdm + o.NumMerges
+
+	arr_ptr_char := make([]*C.char, ssdmm)
+
+	arr_size_t := make([]C.size_t, ssdmm)
 
 	return &BatchEx{
 		cbuf:              cbuf,
-		buf:               charToByte(cbuf, options.TotalBytes),
-		set_keys:          make([]*C.char, options.NumSets),
-		set_keys_sizes:    make([]C.size_t, options.NumSets),
-		set_vals:          make([]*C.char, options.NumSets),
-		set_vals_sizes:    make([]C.size_t, options.NumSets),
-		delete_keys:       make([]*C.char, options.NumDeletes),
-		delete_keys_sizes: make([]C.size_t, options.NumDeletes),
-		merge_keys:        make([]*C.char, options.NumMerges),
-		merge_keys_sizes:  make([]C.size_t, options.NumMerges),
-		merge_vals:        make([]*C.char, options.NumMerges),
-		merge_vals_sizes:  make([]C.size_t, options.NumMerges),
+		buf:               charToByte(cbuf, o.TotalBytes),
+		set_keys:          arr_ptr_char[0:s],
+		set_keys_sizes:    arr_size_t[0:s],
+		set_vals:          arr_ptr_char[s:ss],
+		set_vals_sizes:    arr_size_t[s:ss],
+		delete_keys:       arr_ptr_char[ss:ssd],
+		delete_keys_sizes: arr_size_t[ss:ssd],
+		merge_keys:        arr_ptr_char[ssd:ssdm],
+		merge_keys_sizes:  arr_size_t[ssd:ssdm],
+		merge_vals:        arr_ptr_char[ssdm:ssdmm],
+		merge_vals_sizes:  arr_size_t[ssdm:ssdmm],
 	}
 }
 
