@@ -335,3 +335,35 @@ func applyConfig(o *gorocksdb.Options, config map[string]interface{}) (
 
 	return o, nil
 }
+
+func (s *Store) newWriteOptions() *gorocksdb.WriteOptions {
+	wo := gorocksdb.NewDefaultWriteOptions()
+
+	if s.woptSyncUse {
+		wo.SetSync(s.woptSync)
+	} else {
+		// request fsync on write for safety by default
+		wo.SetSync(true)
+	}
+	if s.woptDisableWALUse {
+		wo.DisableWAL(s.woptDisableWAL)
+	}
+
+	return wo
+}
+
+func (s *Store) newReadOptions() *gorocksdb.ReadOptions {
+	ro := gorocksdb.NewDefaultReadOptions()
+
+	if s.roptVerifyChecksumsUse {
+		ro.SetVerifyChecksums(s.roptVerifyChecksums)
+	}
+	if s.roptFillCacheUse {
+		ro.SetFillCache(s.roptFillCache)
+	}
+	if s.roptReadTierUse {
+		ro.SetReadTier(gorocksdb.ReadTier(s.roptReadTier))
+	}
+
+	return ro
+}
