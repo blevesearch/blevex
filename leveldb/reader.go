@@ -25,6 +25,10 @@ func (r *Reader) Get(key []byte) ([]byte, error) {
 	return b, err
 }
 
+func (r *Reader) MultiGet(keys [][]byte) ([][]byte, error) {
+	return store.MultiGet(r, keys)
+}
+
 func (r *Reader) PrefixIterator(prefix []byte) store.KVIterator {
 	rv := Iterator{
 		store:    r.store,

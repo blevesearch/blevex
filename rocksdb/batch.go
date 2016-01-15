@@ -38,4 +38,3 @@ func (b *Batch) Close() error {
 	b.batch = nil
 	return nil
 }
-

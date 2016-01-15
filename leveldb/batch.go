@@ -43,4 +43,3 @@ func (b *Batch) Close() error {
 	b.merge = nil
 	return nil
 }
-

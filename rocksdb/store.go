@@ -20,9 +20,22 @@ import (
 const Name = "rocksdb"
 
 type Store struct {
-	path string
-	opts *gorocksdb.Options
-	db   *gorocksdb.DB
+	path   string
+	opts   *gorocksdb.Options
+	config map[string]interface{}
+	db     *gorocksdb.DB
+
+	roptVerifyChecksums    bool
+	roptVerifyChecksumsUse bool
+	roptFillCache          bool
+	roptFillCacheUse       bool
+	roptReadTier           int
+	roptReadTierUse        bool
+
+	woptSync          bool
+	woptSyncUse       bool
+	woptDisableWAL    bool
+	woptDisableWALUse bool
 }
 
 func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, error) {
@@ -33,8 +46,9 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 	}
 
 	rv := Store{
-		path: path,
-		opts: gorocksdb.NewDefaultOptions(),
+		path:   path,
+		config: config,
+		opts:   gorocksdb.NewDefaultOptions(),
 	}
 
 	if mo != nil {
@@ -51,17 +65,45 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 		return nil, err
 	}
 
+	b, ok := config["readoptions_verify_checksum"].(bool)
+	if ok {
+		rv.roptVerifyChecksums, rv.roptVerifyChecksumsUse = b, true
+	}
+
+	b, ok = config["readoptions_fill_cache"].(bool)
+	if ok {
+		rv.roptFillCache, rv.roptFillCacheUse = b, true
+	}
+
+	v, ok := config["readoptions_read_tier"].(float64)
+	if ok {
+		rv.roptReadTier, rv.roptReadTierUse = int(v), true
+	}
+
+	b, ok = config["writeoptions_sync"].(bool)
+	if ok {
+		rv.woptSync, rv.woptSyncUse = b, true
+	}
+
+	b, ok = config["writeoptions_disable_WAL"].(bool)
+	if ok {
+		rv.woptDisableWAL, rv.woptDisableWALUse = b, true
+	}
+
 	return &rv, nil
 }
 
 func (s *Store) Close() error {
 	s.db.Close()
+	s.db = nil
+	s.opts.Destroy()
+	s.opts = nil
 	return nil
 }
 
 func (s *Store) Reader() (store.KVReader, error) {
 	snapshot := s.db.NewSnapshot()
-	options := defaultReadOptions()
+	options := s.newReadOptions()
 	options.SetSnapshot(snapshot)
 	return &Reader{
 		store:    s,
@@ -73,7 +115,7 @@ func (s *Store) Reader() (store.KVReader, error) {
 func (s *Store) Writer() (store.KVWriter, error) {
 	return &Writer{
 		store:   s,
-		options: defaultWriteOptions(),
+		options: s.newWriteOptions(),
 	}, nil
 }
 

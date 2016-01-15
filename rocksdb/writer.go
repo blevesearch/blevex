@@ -28,14 +28,21 @@ func (w *Writer) NewBatch() store.KVBatch {
 	return &rv
 }
 
-func (w *Writer) ExecuteBatch(b store.KVBatch) error {
-	batch, ok := b.(*Batch)
-	if !ok {
-		return fmt.Errorf("wrong type of batch")
-	}
+func (w *Writer) NewBatchEx(options store.KVBatchOptions) ([]byte, store.KVBatch, error) {
+	rv := newBatchEx(options)
+	return rv.buf, rv, nil
+}
 
-	err := w.store.db.Write(w.options, batch.batch)
-	return err
+func (w *Writer) ExecuteBatch(b store.KVBatch) error {
+	batchex, ok := b.(*BatchEx)
+	if ok {
+		return batchex.execute(w)
+	}
+	batch, ok := b.(*Batch)
+	if ok {
+		return w.store.db.Write(w.options, batch.batch)
+	}
+	return fmt.Errorf("wrong type of batch")
 }
 
 func (w *Writer) Close() error {

@@ -30,15 +30,29 @@ func (w *Writer) NewBatch() store.KVBatch {
 	return &rv
 }
 
+func (w *Writer) NewBatchEx(options store.KVBatchOptions) ([]byte, store.KVBatch, error) {
+	rv := newBatchEx(w, options)
+	return rv.buf, rv, nil
+}
+
 func (w *Writer) ExecuteBatch(b store.KVBatch) error {
+	w.store.m.Lock()
+	defer w.store.m.Unlock()
+
+	batchex, ok := b.(*BatchEx)
+	if ok {
+		err := batchex.apply()
+		if err != nil {
+			return err
+		}
+
+		return w.kvstore.File().Commit(forestdb.COMMIT_NORMAL)
+	}
 
 	batch, ok := b.(*Batch)
 	if !ok {
 		return fmt.Errorf("wrong type of batch")
 	}
-
-	w.store.m.Lock()
-	defer w.store.m.Unlock()
 
 	for key, mergeOps := range batch.merge.Merges {
 		k := []byte(key)
