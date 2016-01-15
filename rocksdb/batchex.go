@@ -16,6 +16,8 @@ package rocksdb
 
 char *blevex_rocksdb_execute_direct_batch(
     rocksdb_t* db,
+    const unsigned char writeoptions_sync,
+    const unsigned char writeoptions_disable_WAL,
     const int num_sets,
     const char* const* set_keys,
     const size_t* set_keys_sizes,
@@ -49,6 +51,9 @@ char *blevex_rocksdb_execute_direct_batch(
     char *errMsg = NULL;
 
     rocksdb_writeoptions_t *options = rocksdb_writeoptions_create();
+
+    rocksdb_writeoptions_set_sync(options, writeoptions_sync);
+    rocksdb_writeoptions_disable_WAL(options, writeoptions_disable_WAL);
 
     rocksdb_write(db, options, b, &errMsg);
 
@@ -222,8 +227,22 @@ func (b *BatchEx) execute(w *Writer) error {
 		merge_vals_sizes = (*C.size_t)(unsafe.Pointer(&b.merge_vals_sizes[0]))
 	}
 
+	// request fsync on write for safety by default (bleve's convention),
+	// although rocksdb writeoptions normal default is false for sync.
+	woptSync := C.uchar(1)
+	if w.store.woptSyncUse {
+		woptSync = boolToChar(w.store.woptSync)
+	}
+
+	woptDisableWAL := C.uchar(0)
+	if w.store.woptDisableWALUse {
+		woptDisableWAL = boolToChar(w.store.woptDisableWAL)
+	}
+
 	cErr := C.blevex_rocksdb_execute_direct_batch(
 		(*C.rocksdb_t)(w.store.db.UnsafeGetDB()),
+		woptSync,
+		woptDisableWAL,
 		num_sets,
 		set_keys,
 		set_keys_sizes,
@@ -272,4 +291,11 @@ func unsafeToCSizeTSlice(data unsafe.Pointer, len int) []C.size_t {
 	sH.Cap, sH.Len, sH.Data = len, len, uintptr(data)
 
 	return value
+}
+
+func boolToChar(b bool) C.uchar {
+	if b {
+		return 1
+	}
+	return 0
 }
