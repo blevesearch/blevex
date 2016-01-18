@@ -18,10 +18,13 @@ install:
   - go get github.com/blevesearch/blevex/leveldb/...
   - go get github.com/blevesearch/blevex/stemmer_filter/...
   - go get github.com/blevesearch/segment
+  - go get github.com/blevesearch/blevex/cznicb/...
+  - go get github.com/blevesearch/blevex/detect_lang/...
 
 script:
   - go test -v github.com/blevesearch/blevex/cznicb
   - go test -v github.com/blevesearch/blevex/leveldb
+  - go test -v github.com/blevesearch/blevex/detect_lang
   - go test -v github.com/blevesearch/blevex/stemmer_filter
   # cannot test icu, old version installed on travis
   #- go test -v github.com/blevesearch/blevex/icu
