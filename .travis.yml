@@ -1,9 +1,11 @@
-sudo: false
-
 language: go
 
 go:
  - 1.5
+
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y snappy
 
 install:
   - cd
