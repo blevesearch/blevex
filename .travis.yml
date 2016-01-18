@@ -5,7 +5,7 @@ language: go
 go:
  - 1.5
 
-env:
+global:
   - LEVLDB=$HOME/leveldb-1.18
   - CGO_CFLAGS="-I${LEVELDB}/include/"
   - CGO_LDFLAGS="-L${LEVELDB}"
