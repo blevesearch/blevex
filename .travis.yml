@@ -1,0 +1,22 @@
+sudo: false
+
+language: go
+
+go:
+ - 1.5
+
+env:
+  - LEVLDB=$HOME/leveldb-1.18
+  - CGO_CFLAGS="-I${LEVELDB}/include/"
+  - CGO_LDFLAGS="-L${LEVELDB}"
+
+script:
+  - curl -sLO https://github.com/google/leveldb/archive/v1.18.tar.gz
+  - tar zxvf v1.18.tar.gz
+  - cd leveldb-1.18
+  - make
+  - go test -v ./leveldb
+
+notifications:
+  email:
+    - marty.schoch@gmail.com
