@@ -21,7 +21,25 @@ install:
 script:
   - go test -v github.com/blevesearch/blevex/leveldb
   - go test -v github.com/blevesearch/blevex/stemmer_filter
-  - go test -v github.com/blevesearch/blevex/icu
+  # cannot test icu, old version installed on travis
+  #- go test -v github.com/blevesearch/blevex/icu
+  - go test -v github.com/blevesearch/blevex/lang/da
+  - go test -v github.com/blevesearch/blevex/lang/de
+  - go test -v github.com/blevesearch/blevex/lang/en
+  - go test -v github.com/blevesearch/blevex/lang/es
+  - go test -v github.com/blevesearch/blevex/lang/fi
+  - go test -v github.com/blevesearch/blevex/lang/fr
+  - go test -v github.com/blevesearch/blevex/lang/hu
+  - go test -v github.com/blevesearch/blevex/lang/it
+  - go test -v github.com/blevesearch/blevex/lang/nl
+  - go test -v github.com/blevesearch/blevex/lang/no
+  - go test -v github.com/blevesearch/blevex/lang/pt
+  - go test -v github.com/blevesearch/blevex/lang/ro
+  - go test -v github.com/blevesearch/blevex/lang/ru
+  - go test -v github.com/blevesearch/blevex/lang/sv
+  # cannot test th, depends on icu
+  #- go test -v github.com/blevesearch/blevex/lang/th
+  - go test -v github.com/blevesearch/blevex/lang/tr
 
 notifications:
   email:
