@@ -20,6 +20,7 @@ install:
   - go get github.com/blevesearch/segment
 
 script:
+  - go test -v github.com/blevesearch/blevex/cznicb
   - go test -v github.com/blevesearch/blevex/leveldb
   - go test -v github.com/blevesearch/blevex/stemmer_filter
   # cannot test icu, old version installed on travis
