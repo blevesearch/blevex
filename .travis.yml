@@ -10,11 +10,13 @@ global:
   - CGO_CFLAGS="-I${LEVELDB}/include/"
   - CGO_LDFLAGS="-L${LEVELDB}"
 
-script:
+install:
   - curl -sLO https://github.com/google/leveldb/archive/v1.18.tar.gz
   - tar zxvf v1.18.tar.gz
   - cd leveldb-1.18
   - make
+
+script:
   - go test -v ./leveldb
   - go test -v ./stemmer_filter
 
