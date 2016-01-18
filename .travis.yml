@@ -3,11 +3,9 @@ language: go
 go:
  - 1.5
 
-before_install:
+install:
   - sudo apt-get -qq update
   - sudo apt-get install -y snappy
-
-install:
   - cd
   - export LEVELDB=$HOME/leveldb-1.18
   - export FORESTDB=$HOME/forestdb-master
