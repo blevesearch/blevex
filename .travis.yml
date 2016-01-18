@@ -6,6 +6,7 @@ go:
  - 1.5
 
 install:
+  - cd
   - export LEVELDB=$HOME/leveldb-1.18
   - export CGO_CFLAGS="-I${LEVELDB}/include/"
   - export CGO_LDFLAGS="-L${LEVELDB}"
@@ -13,13 +14,10 @@ install:
   - tar zxvf v1.18.tar.gz
   - cd leveldb-1.18
   - make
-  - pwd
   - go get github.com/blevesearch/blevex/leveldb/...
   - go get github.com/blevesearch/blevex/stemmer_filter/...
 
 script:
-  - printenv LEVELDB
-  - printenv CGO_CFLAGS
   - go test -v github.com/blevesearch/blevex/leveldb
   - go test -v github.com/blevesearch/blevex/stemmer_filter
 
