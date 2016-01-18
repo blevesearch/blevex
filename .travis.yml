@@ -35,10 +35,10 @@ install:
   - mkdir build
   - cd build
   - cmake ..
+  - make
   # fetch all necessary go deps
   - cd
   - go get github.com/blevesearch/blevex/leveldb/...
-  - printenv CGO_LDFLAGS
   - go get github.com/blevesearch/blevex/forestdb/...
   - go get github.com/blevesearch/blevex/stemmer_filter/...
   - go get github.com/blevesearch/segment
