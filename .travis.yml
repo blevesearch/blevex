@@ -8,14 +8,23 @@ go:
 install:
   - cd
   - export LEVELDB=$HOME/leveldb-1.18
-  - export CGO_CFLAGS="-I${LEVELDB}/include/"
-  - export CGO_LDFLAGS="-L${LEVELDB}"
-  - export LD_LIBRARY_PATH=$LEVELDB
+  - export FORESTDB=$HOME/forestdb-master
+  - export CGO_CFLAGS="-I${LEVELDB}/include/;${FORESTDB}/include"
+  - export CGO_LDFLAGS="-L${LEVELDB};${FORESTDB}/build"
+  - export LD_LIBRARY_PATH="${LEVELDB};${FORESTDB}/build"
   - curl -sLO https://github.com/google/leveldb/archive/v1.18.tar.gz
   - tar zxvf v1.18.tar.gz
   - cd leveldb-1.18
   - make
+  - cd ..
+  - curl -sLO https://github.com/couchbase/forestdb/archive/master.zip
+  - unzip master.zip
+  - cd forestdb-master
+  - mkdir build
+  - cd build
+  - cmake ..
   - go get github.com/blevesearch/blevex/leveldb/...
+  - go get github.com/blevesearch/blevex/forestdb/...
   - go get github.com/blevesearch/blevex/stemmer_filter/...
   - go get github.com/blevesearch/segment
   - go get github.com/blevesearch/blevex/cznicb/...
@@ -24,6 +33,7 @@ install:
 script:
   - go test -v github.com/blevesearch/blevex/cznicb
   - go test -v github.com/blevesearch/blevex/leveldb
+  - go test -v github.com/blevesearch/blevex/forestdb
   - go test -v github.com/blevesearch/blevex/detect_lang
   - go test -v github.com/blevesearch/blevex/stemmer_filter
   # cannot test icu, old version installed on travis
