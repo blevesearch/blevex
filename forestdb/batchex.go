@@ -29,7 +29,8 @@ fdb_status blevex_forestdb_execute_direct_batch(
     fdb_doc *doc;
     fdb_doc_create(&doc, NULL, 0, NULL, 0, NULL, 0);
 
-    for (int i = 0; i < num_sets; i++ ) {
+		int i = 0;
+    for (i = 0; i < num_sets; i++ ) {
         doc->key = set_keys[i];
         doc->keylen = set_keys_sizes[i];
 
@@ -46,7 +47,7 @@ fdb_status blevex_forestdb_execute_direct_batch(
     doc->body = NULL;
     doc->bodylen = 0;
 
-    for (int i = 0; i < num_deletes; i++ ) {
+    for (i = 0; i < num_deletes; i++ ) {
         doc->key = delete_keys[i];
         doc->keylen = delete_keys_sizes[i];
 
@@ -77,6 +78,8 @@ void blevex_forestdb_free_direct_batch(void **bufs) {
     free(bufs[2]);
 }
 */
+//#include <libforestdb/forestdb.h>
+//#cgo LDFLAGS: -lforestdb
 import "C"
 
 import (
