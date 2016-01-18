@@ -18,6 +18,7 @@ install:
   - make
   - ls
   - ls .libs
+  - cp .libs/libsnappy.* .
   - cd ..
   - curl -sLO https://github.com/google/leveldb/archive/v1.18.tar.gz
   - tar zxvf v1.18.tar.gz
