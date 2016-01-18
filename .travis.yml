@@ -17,8 +17,8 @@ install:
   - make
 
 script:
-  - go test -v ./leveldb
-  - go test -v ./stemmer_filter
+  - go test -v github.com/blevesearch/blevex/leveldb
+  - go test -v github.com/blevesearch/blevex/stemmer_filter
 
 notifications:
   email:
