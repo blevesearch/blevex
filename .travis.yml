@@ -16,6 +16,7 @@ script:
   - cd leveldb-1.18
   - make
   - go test -v ./leveldb
+  - go test -v ./stemmer_filter
 
 notifications:
   email:
