@@ -21,6 +21,7 @@ install:
 script:
   - go test -v github.com/blevesearch/blevex/leveldb
   - go test -v github.com/blevesearch/blevex/stemmer_filter
+  - go test -v github.com/blevesearch/blevex/icu
 
 notifications:
   email:
