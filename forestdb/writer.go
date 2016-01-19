@@ -31,14 +31,8 @@ func (w *Writer) NewBatch() store.KVBatch {
 }
 
 func (w *Writer) NewBatchEx(options store.KVBatchOptions) ([]byte, store.KVBatch, error) {
-	// TODO: Reverted use of newBatchEx() as there's a merge operator
-	// issue, with error message: "error executing batch: forestdb
-	// BatchEx merge operator failure".
-	//
-	// rv := newBatchEx(w, options)
-	// return rv.buf, rv, nil
-
-	return make([]byte, options.TotalBytes), w.NewBatch(), nil
+	rv := newBatchEx(w, options)
+	return rv.buf, rv, nil
 }
 
 func (w *Writer) ExecuteBatch(b store.KVBatch) error {

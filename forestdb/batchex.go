@@ -187,17 +187,28 @@ func (b *BatchEx) Close() error {
 }
 
 func (b *BatchEx) apply() error {
-	for key, mergeOps := range b.merge.Merges {
-		k := []byte(key)
-		ob, err := b.w.kvstore.GetKV(k)
-		if err != nil && err != goforestdb.RESULT_KEY_NOT_FOUND {
-			return err
+	// Hold onto final merge key/val bytes so GC doesn't collect them
+	// until we're done.
+	var mergeBytes [][]byte
+
+	if len(b.merge.Merges) > 0 {
+		mergeBytes = make([][]byte, 0, len(b.merge.Merges)*2)
+
+		for key, mergeOps := range b.merge.Merges {
+			k := []byte(key)
+			ob, err := b.w.kvstore.GetKV(k)
+			if err != nil && err != goforestdb.RESULT_KEY_NOT_FOUND {
+				return err
+			}
+			mergedVal, fullMergeOk := b.w.store.mo.FullMerge(k, ob, mergeOps)
+			if !fullMergeOk {
+				return fmt.Errorf("forestdb BatchEx merge operator failure")
+			}
+
+			mergeBytes = append(mergeBytes, k, mergedVal)
+
+			b.Set(k, mergedVal)
 		}
-		mergedVal, fullMergeOk := b.w.store.mo.FullMerge(k, ob, mergeOps)
-		if !fullMergeOk {
-			return fmt.Errorf("forestdb BatchEx merge operator failure")
-		}
-		b.Set(k, mergedVal)
 	}
 
 	var num_sets C.int
@@ -236,6 +247,10 @@ func (b *BatchEx) apply() error {
 		delete_keys_sizes)
 	if int(errNo) != 0 {
 		return goforestdb.Error(errNo)
+	}
+
+	if mergeBytes != nil { // Ok to let GC have mergeBytes now.
+		mergeBytes = nil
 	}
 
 	return nil
