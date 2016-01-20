@@ -29,7 +29,7 @@ fdb_status blevex_forestdb_execute_direct_batch(
     fdb_doc *doc;
     fdb_doc_create(&doc, NULL, 0, NULL, 0, NULL, 0);
 
-		int i = 0;
+    int i = 0;
     for (i = 0; i < num_sets; i++ ) {
         doc->key = set_keys[i];
         doc->keylen = set_keys_sizes[i];
@@ -39,7 +39,14 @@ fdb_status blevex_forestdb_execute_direct_batch(
 
         rv = fdb_set(handle, doc);
         if (rv != FDB_RESULT_SUCCESS) {
+            doc->key = NULL;
+            doc->keylen = 0;
+
+            doc->body = NULL;
+            doc->bodylen = 0;
+
             fdb_doc_free(doc);
+
             return rv;
         }
     }
@@ -194,20 +201,34 @@ func (b *BatchEx) apply() error {
 	if len(b.merge.Merges) > 0 {
 		mergeBytes = make([][]byte, 0, len(b.merge.Merges)*2)
 
-		for key, mergeOps := range b.merge.Merges {
-			k := []byte(key)
-			ob, err := b.w.kvstore.GetKV(k)
-			if err != nil && err != goforestdb.RESULT_KEY_NOT_FOUND {
-				return err
-			}
-			mergedVal, fullMergeOk := b.w.store.mo.FullMerge(k, ob, mergeOps)
-			if !fullMergeOk {
-				return fmt.Errorf("forestdb BatchEx merge operator failure")
+		mergeKeys := make([][]byte, len(b.merge.Merges))
+		mergeOps := make([][][]byte, len(b.merge.Merges))
+
+		i := 0
+		for key, ops := range b.merge.Merges {
+			mergeKeys[i] = []byte(key)
+			mergeOps[i] = ops
+			i += 1
+		}
+
+		currVals, releaseVals, err := directMultiGet(b.w.kvstore, mergeKeys)
+		if err != nil {
+			return err
+		}
+
+		defer releaseVals()
+
+		for i, key := range mergeKeys {
+			mergedVal, ok := b.w.store.mo.FullMerge(key, currVals[i], mergeOps[i])
+			if !ok {
+				return fmt.Errorf("forestdb BatchEx merge operator failure,"+
+					" key: %s, currVal: %q, mergeOps: %#v, i: %d",
+					key, currVals[i], mergeOps[i], i)
 			}
 
-			mergeBytes = append(mergeBytes, k, mergedVal)
+			mergeBytes = append(mergeBytes, key, mergedVal)
 
-			b.Set(k, mergedVal)
+			b.Set(key, mergedVal)
 		}
 	}
 
