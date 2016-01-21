@@ -9,10 +9,14 @@ be aware that:
 
 things to try:
 
-- unit of prefix compressiion is chunksize default 8size, try 4?
+- unit of prefix compression is chunksize default 8 size, try 4?
 - async + auto commit
+- understand configs like maxWriterLockProb and walThreshold?
+- split store lock into smaller?
+- instruments?
 
 ---------
-cbgt
+cbgt:
+
 - start with GOTRACEBACK=crash
- - integrate with minidump
+- integrate with minidump
