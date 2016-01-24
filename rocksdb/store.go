@@ -96,8 +96,13 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 func (s *Store) Close() error {
 	s.db.Close()
 	s.db = nil
-	s.opts.Destroy()
+
+	// NOTE: Not destroying as a (leaky) workaround to avoid a segfault.
+	// Please see: https://github.com/blevesearch/bleve/issues/332
+	// s.opts.Destroy()
+
 	s.opts = nil
+
 	return nil
 }
 
