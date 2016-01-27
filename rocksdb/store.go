@@ -9,21 +9,38 @@
 
 package rocksdb
 
+// #cgo CXXFLAGS: -std=c++11
+// #cgo CPPFLAGS: -I ../../../cockroachdb/c-rocksdb/internal/include
+// #cgo darwin LDFLAGS: -Wl,-undefined -Wl,dynamic_lookup
+// #cgo !darwin LDFLAGS: -Wl,-unresolved-symbols=ignore-all
+// #include <stdlib.h>
+// #include "rocksdb/c.h"
+// #include "merge.h"
+/*
+
+*/
+import "C"
+
 import (
+	"errors"
 	"fmt"
+	"unsafe"
 
 	"github.com/blevesearch/bleve/index/store"
 	"github.com/blevesearch/bleve/registry"
-	"github.com/tecbot/gorocksdb"
+
+	_ "github.com/cockroachdb/c-rocksdb"
 )
 
 const Name = "rocksdb"
 
 type Store struct {
 	path   string
-	opts   *gorocksdb.Options
+	opts   *C.rocksdb_options_t
 	config map[string]interface{}
-	db     *gorocksdb.DB
+	db     *C.rocksdb_t
+	mo     *C.rocksdb_mergeoperator_t
+	gomo   store.MergeOperator // hold refernce to it to prevent GC
 
 	roptVerifyChecksums    bool
 	roptVerifyChecksumsUse bool
@@ -48,11 +65,20 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 	rv := Store{
 		path:   path,
 		config: config,
-		opts:   gorocksdb.NewDefaultOptions(),
+		opts:   C.rocksdb_options_create(),
 	}
 
+	// install merge operator, prefer C version if available
 	if mo != nil {
-		rv.opts.SetMergeOperator(mo)
+		rv.gomo = mo
+		if moc, ok := mo.(store.NativeMergeOperator); ok {
+			rv.mo = C.native_mergeoperator_create(moc.FullMergeC(), moc.PartialMergeC(), moc.NameC())
+			C.rocksdb_options_set_merge_operator(rv.opts, rv.mo)
+		} else {
+			state := unsafe.Pointer(&mo)
+			rv.mo = C.go_mergeoperator_create(state)
+			C.rocksdb_options_set_merge_operator(rv.opts, rv.mo)
+		}
 	}
 
 	_, err := applyConfig(rv.opts, config)
@@ -60,9 +86,14 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 		return nil, err
 	}
 
-	rv.db, err = gorocksdb.OpenDb(rv.opts, rv.path)
-	if err != nil {
-		return nil, err
+	var cErr *C.char
+	cname := C.CString(rv.path)
+	defer C.free(unsafe.Pointer(cname))
+	rv.db = C.rocksdb_open(rv.opts, cname, &cErr)
+	if cErr != nil {
+		defer C.free(unsafe.Pointer(cErr))
+
+		return nil, errors.New(C.GoString(cErr))
 	}
 
 	b, ok := config["readoptions_verify_checksum"].(bool)
@@ -94,17 +125,17 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 }
 
 func (s *Store) Close() error {
-	s.db.Close()
+	C.rocksdb_close(s.db)
 	s.db = nil
-	s.opts.Destroy()
+	C.rocksdb_options_destroy(s.opts)
 	s.opts = nil
 	return nil
 }
 
 func (s *Store) Reader() (store.KVReader, error) {
-	snapshot := s.db.NewSnapshot()
+	snapshot := C.rocksdb_create_snapshot(s.db)
 	options := s.newReadOptions()
-	options.SetSnapshot(snapshot)
+	C.rocksdb_readoptions_set_snapshot(options, snapshot)
 	return &Reader{
 		store:    s,
 		snapshot: snapshot,

@@ -9,15 +9,14 @@
 
 package rocksdb
 
-import (
-	"bytes"
+// #include "rocksdb/c.h"
+import "C"
 
-	"github.com/tecbot/gorocksdb"
-)
+import "bytes"
 
 type Iterator struct {
 	store    *Store
-	iterator *gorocksdb.Iterator
+	iterator *C.rocksdb_iterator_t
 
 	prefix []byte
 	start  []byte
@@ -45,11 +44,12 @@ func (i *Iterator) Seek(key []byte) {
 			key = end
 		}
 	}
-	i.iterator.Seek(key)
+	cKey := byteToChar(key)
+	C.rocksdb_iter_seek(i.iterator, cKey, C.size_t(len(key)))
 }
 
 func (i *Iterator) Next() {
-	i.iterator.Next()
+	C.rocksdb_iter_next(i.iterator)
 }
 
 func (i *Iterator) Current() ([]byte, []byte, bool) {
@@ -60,26 +60,37 @@ func (i *Iterator) Current() ([]byte, []byte, bool) {
 }
 
 func (i *Iterator) Key() []byte {
-	return i.iterator.Key().Data()
+	var cLen C.size_t
+	cKey := C.rocksdb_iter_key(i.iterator, &cLen)
+	if cKey == nil {
+		return nil
+	}
+	return charToByte(cKey, cLen)
 }
 
 func (i *Iterator) Value() []byte {
-	return i.iterator.Value().Data()
+	var cLen C.size_t
+	cKey := C.rocksdb_iter_value(i.iterator, &cLen)
+	if cKey == nil {
+		return nil
+	}
+
+	return charToByte(cKey, cLen)
 }
 
 func (i *Iterator) Valid() bool {
-	if !i.iterator.Valid() {
+	if C.rocksdb_iter_valid(i.iterator) == 0 {
 		return false
-	} else if i.prefix != nil && !bytes.HasPrefix(i.iterator.Key().Data(), i.prefix) {
+	} else if i.prefix != nil && !bytes.HasPrefix(i.Key(), i.prefix) {
 		return false
-	} else if i.end != nil && bytes.Compare(i.iterator.Key().Data(), i.end) >= 0 {
+	} else if i.end != nil && bytes.Compare(i.Key(), i.end) >= 0 {
 		return false
 	}
-
 	return true
 }
 
 func (i *Iterator) Close() error {
-	i.iterator.Close()
+	C.rocksdb_iter_destroy(i.iterator)
+	i.iterator = nil
 	return nil
 }

@@ -9,32 +9,36 @@
 
 package rocksdb
 
-import (
-	"github.com/tecbot/gorocksdb"
-)
+// #include <rocksdb/c.h>
+import "C"
 
 type Batch struct {
-	batch *gorocksdb.WriteBatch
+	batch *C.rocksdb_writebatch_t
 }
 
 func (b *Batch) Set(key, val []byte) {
-	b.batch.Put(key, val)
+	cKey := byteToChar(key)
+	cValue := byteToChar(val)
+	C.rocksdb_writebatch_put(b.batch, cKey, C.size_t(len(key)), cValue, C.size_t(len(val)))
 }
 
 func (b *Batch) Delete(key []byte) {
-	b.batch.Delete(key)
+	cKey := byteToChar(key)
+	C.rocksdb_writebatch_delete(b.batch, cKey, C.size_t(len(key)))
 }
 
 func (b *Batch) Merge(key, val []byte) {
-	b.batch.Merge(key, val)
+	cKey := byteToChar(key)
+	cValue := byteToChar(val)
+	C.rocksdb_writebatch_merge(b.batch, cKey, C.size_t(len(key)), cValue, C.size_t(len(val)))
 }
 
 func (b *Batch) Reset() {
-	b.batch.Clear()
+	C.rocksdb_writebatch_clear(b.batch)
 }
 
 func (b *Batch) Close() error {
-	b.batch.Destroy()
+	C.rocksdb_writebatch_destroy(b.batch)
 	b.batch = nil
 	return nil
 }
