@@ -34,13 +34,15 @@ import (
 
 const Name = "rocksdb"
 
+// hold refernce to it in global map to prevent GC
+var mergePointers = make(map[unsafe.Pointer]MergeOperator)
+
 type Store struct {
 	path   string
 	opts   *C.rocksdb_options_t
 	config map[string]interface{}
 	db     *C.rocksdb_t
 	mo     *C.rocksdb_mergeoperator_t
-	gomo   store.MergeOperator // hold refernce to it to prevent GC
 
 	roptVerifyChecksums    bool
 	roptVerifyChecksumsUse bool
@@ -70,12 +72,12 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 
 	// install merge operator, prefer C version if available
 	if mo != nil {
-		rv.gomo = mo
 		if moc, ok := mo.(store.NativeMergeOperator); ok {
 			rv.mo = C.native_mergeoperator_create(moc.FullMergeC(), moc.PartialMergeC(), moc.NameC())
 			C.rocksdb_options_set_merge_operator(rv.opts, rv.mo)
 		} else {
 			state := unsafe.Pointer(&mo)
+			mergePointers[state] = mo
 			rv.mo = C.go_mergeoperator_create(state)
 			C.rocksdb_options_set_merge_operator(rv.opts, rv.mo)
 		}

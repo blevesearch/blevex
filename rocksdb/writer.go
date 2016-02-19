@@ -34,8 +34,11 @@ func (w *Writer) NewBatch() store.KVBatch {
 }
 
 func (w *Writer) NewBatchEx(options store.KVBatchOptions) ([]byte, store.KVBatch, error) {
-	rv := newBatchEx(options)
-	return rv.buf, rv, nil
+	// NOTE: We've reverted to old, emulated batch due to apparent corruption.
+	//
+	// rv := newBatchEx(options)
+	// return rv.buf, rv, nil
+	return make([]byte, options.TotalBytes), w.NewBatch(), nil
 }
 
 func (w *Writer) ExecuteBatch(b store.KVBatch) error {
