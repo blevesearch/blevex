@@ -9,23 +9,42 @@
 
 package rocksdb
 
+// #include <stdlib.h>
+// #include "rocksdb/c.h"
+import "C"
+
 import (
+	"errors"
+	"unsafe"
+
 	"github.com/blevesearch/bleve/index/store"
-	"github.com/tecbot/gorocksdb"
 )
 
 type Reader struct {
 	store    *Store
-	snapshot *gorocksdb.Snapshot
-	options  *gorocksdb.ReadOptions
+	snapshot *C.rocksdb_snapshot_t
+	options  *C.rocksdb_readoptions_t
 }
 
+// Get will return values which are bytes copied from C to Go, you own them
 func (r *Reader) Get(key []byte) ([]byte, error) {
-	b, err := r.store.db.Get(r.options, key)
-	if err != nil {
-		return nil, err
+	cKey := byteToChar(key)
+
+	var cErr *C.char
+	var cValLen C.size_t
+	cValue := C.rocksdb_get(r.store.db, r.options, cKey, C.size_t(len(key)), &cValLen, &cErr)
+	if cErr != nil {
+		defer C.free(unsafe.Pointer(cErr))
+		return nil, errors.New(C.GoString(cErr))
 	}
-	return b.Data(), err
+
+	if cValue == nil {
+		return nil, nil
+	}
+
+	defer C.free(unsafe.Pointer(cValue))
+	return C.GoBytes(unsafe.Pointer(cValue), C.int(cValLen)), nil
+
 }
 
 func (r *Reader) MultiGet(keys [][]byte) ([][]byte, error) {
@@ -35,7 +54,7 @@ func (r *Reader) MultiGet(keys [][]byte) ([][]byte, error) {
 func (r *Reader) PrefixIterator(prefix []byte) store.KVIterator {
 	rv := Iterator{
 		store:    r.store,
-		iterator: r.store.db.NewIterator(r.options),
+		iterator: C.rocksdb_create_iterator(r.store.db, r.options),
 		prefix:   prefix,
 	}
 	rv.Seek(prefix)
@@ -45,7 +64,7 @@ func (r *Reader) PrefixIterator(prefix []byte) store.KVIterator {
 func (r *Reader) RangeIterator(start, end []byte) store.KVIterator {
 	rv := Iterator{
 		store:    r.store,
-		iterator: r.store.db.NewIterator(r.options),
+		iterator: C.rocksdb_create_iterator(r.store.db, r.options),
 		start:    start,
 		end:      end,
 	}
@@ -54,7 +73,9 @@ func (r *Reader) RangeIterator(start, end []byte) store.KVIterator {
 }
 
 func (r *Reader) Close() error {
-	r.options.Destroy()
-	r.snapshot.Release()
+	C.rocksdb_readoptions_destroy(r.options)
+	r.options = nil
+	C.rocksdb_release_snapshot(r.store.db, r.snapshot)
+	r.snapshot = nil
 	return nil
 }

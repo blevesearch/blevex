@@ -9,28 +9,36 @@
 
 package rocksdb
 
+// #include <stdlib.h>
+// #include "rocksdb/c.h"
+import "C"
+
 import (
+	"errors"
 	"fmt"
+	"unsafe"
 
 	"github.com/blevesearch/bleve/index/store"
-	"github.com/tecbot/gorocksdb"
 )
 
 type Writer struct {
 	store   *Store
-	options *gorocksdb.WriteOptions
+	options *C.rocksdb_writeoptions_t
 }
 
 func (w *Writer) NewBatch() store.KVBatch {
 	rv := Batch{
-		batch: gorocksdb.NewWriteBatch(),
+		batch: C.rocksdb_writebatch_create(),
 	}
 	return &rv
 }
 
 func (w *Writer) NewBatchEx(options store.KVBatchOptions) ([]byte, store.KVBatch, error) {
-	rv := newBatchEx(options)
-	return rv.buf, rv, nil
+	// NOTE: We've reverted to old, emulated batch due to apparent corruption.
+	//
+	// rv := newBatchEx(options)
+	// return rv.buf, rv, nil
+	return make([]byte, options.TotalBytes), w.NewBatch(), nil
 }
 
 func (w *Writer) ExecuteBatch(b store.KVBatch) error {
@@ -40,12 +48,21 @@ func (w *Writer) ExecuteBatch(b store.KVBatch) error {
 	}
 	batch, ok := b.(*Batch)
 	if ok {
-		return w.store.db.Write(w.options, batch.batch)
+		var cErr *C.char
+		C.rocksdb_write(w.store.db, w.options, batch.batch, &cErr)
+		if cErr != nil {
+			defer C.free(unsafe.Pointer(cErr))
+
+			return errors.New(C.GoString(cErr))
+		}
+
+		return nil
 	}
 	return fmt.Errorf("wrong type of batch")
 }
 
 func (w *Writer) Close() error {
-	w.options.Destroy()
+	C.rocksdb_writeoptions_destroy(w.options)
+	w.options = nil
 	return nil
 }

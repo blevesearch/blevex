@@ -15,6 +15,7 @@ import (
 
 	"github.com/blevesearch/bleve/index/store"
 	"github.com/blevesearch/bleve/index/store/test"
+	blevextest "github.com/blevesearch/blevex/store/test"
 )
 
 func open(t *testing.T, mo store.MergeOperator) store.KVStore {
@@ -91,4 +92,16 @@ func TestRocksDBMerge(t *testing.T) {
 	s := open(t, &test.TestMergeCounter{})
 	defer cleanup(t, s)
 	test.CommonTestMerge(t, s)
+}
+
+func TestRocksDBMergeNative(t *testing.T) {
+	s := open(t, &blevextest.TestMergeCounter{})
+	blevextest.CommonTestMergeNative(t, s, 1)
+	err := s.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	s = open(t, &blevextest.TestMergeCounter{})
+	defer cleanup(t, s)
+	blevextest.CommonTestMergeNative(t, s, 2)
 }
