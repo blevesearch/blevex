@@ -75,9 +75,24 @@ func (r *Reader) Close() (rverr error) {
 	rverr = r.snapshot.Close()
 	//fixme review this
 	// return to pool even error closing snapshot?
-	err := r.store.kvpool.Return(r.kvstore)
-	if rverr == nil && err != nil {
-		rverr = err // return first error
+	if r.kvstore != nil {
+		err := r.store.kvpool.Return(r.kvstore)
+		if rverr == nil && err != nil {
+			rverr = err // return first error
+		}
 	}
 	return
+}
+
+// Reader method allows cloning of a snapshot for multi-threaded use
+func (r *Reader) Reader() (store.KVReader, error) {
+	snapshot, err := r.snapshot.SnapshotOpen(forestdb.SnapshotInmem)
+	if err != nil {
+		return nil, err
+	}
+	return &Reader{
+		store:    r.store,
+		kvstore:  nil, // dont return to pool, since this is a clone
+		snapshot: snapshot,
+	}, nil
 }
