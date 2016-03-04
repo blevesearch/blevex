@@ -10,6 +10,7 @@
 package forestdb
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 
@@ -26,6 +27,9 @@ type Store struct {
 	path   string
 	kvpool *forestdb.KVPool
 	mo     store.MergeOperator
+
+	statsMutex  sync.Mutex
+	statsHandle *forestdb.KVStore
 }
 
 func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, error) {
@@ -53,7 +57,9 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 		numConcurrent = int(nc)
 	}
 
-	kvpool, err := forestdb.NewKVPool(path, forestDBConfig, "default", kvconfig, numConcurrent)
+	// request 1 extra connection in pool to be reserved for issuing
+	// stats calls
+	kvpool, err := forestdb.NewKVPool(path, forestDBConfig, "default", kvconfig, numConcurrent+1)
 	if err != nil {
 		return nil, err
 	}
@@ -64,10 +70,18 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 		kvpool: kvpool,
 	}
 
+	rv.statsHandle, err = kvpool.Get()
+	if err != nil {
+		return nil, err
+	}
+
 	return &rv, nil
 }
 
 func (s *Store) Close() error {
+	if s.statsHandle != nil {
+		s.kvpool.Return(s.statsHandle)
+	}
 	return s.kvpool.Close()
 }
 
@@ -85,6 +99,12 @@ func (s *Store) Reader() (store.KVReader, error) {
 		kvstore:  kvstore,
 		snapshot: snapshot,
 	}, nil
+}
+
+func (s *Store) Stats() json.Marshaler {
+	return &kvStat{
+		s: s,
+	}
 }
 
 func (s *Store) Writer() (store.KVWriter, error) {
