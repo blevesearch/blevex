@@ -19,6 +19,8 @@ func (k *kvStat) MarshalJSON() ([]byte, error) {
 	k.s.statsMutex.Lock()
 	defer k.s.statsMutex.Unlock()
 
+	estimatedSpaceUsed := k.s.statsHandle.File().EstimateSpaceUsed()
+
 	opsInfo, err := k.s.statsHandle.OpsInfo()
 	if err != nil {
 		return nil, err
@@ -32,5 +34,6 @@ func (k *kvStat) MarshalJSON() ([]byte, error) {
 	m["gets"] = opsInfo.NumGets()
 	m["iterator_gets"] = opsInfo.NumIteratorGets()
 	m["iterator_moves"] = opsInfo.NumIteratorMoves()
+	m["estimated_space_used"] = estimatedSpaceUsed
 	return json.Marshal(m)
 }
