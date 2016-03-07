@@ -15,15 +15,19 @@ type kvStat struct {
 	s *Store
 }
 
-func (k *kvStat) MarshalJSON() ([]byte, error) {
+func (k *kvStat) statsMap() map[string]interface{} {
 	k.s.statsMutex.Lock()
 	defer k.s.statsMutex.Unlock()
 
-	estimatedSpaceUsed := k.s.statsHandle.File().EstimateSpaceUsed()
+	f := k.s.statsHandle.File()
+	finfo, err := f.Info()
+	if err != nil {
+		return map[string]interface{}{}
+	}
 
 	opsInfo, err := k.s.statsHandle.OpsInfo()
 	if err != nil {
-		return nil, err
+		return map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{}
@@ -34,6 +38,13 @@ func (k *kvStat) MarshalJSON() ([]byte, error) {
 	m["gets"] = opsInfo.NumGets()
 	m["iterator_gets"] = opsInfo.NumIteratorGets()
 	m["iterator_moves"] = opsInfo.NumIteratorMoves()
-	m["estimated_space_used"] = estimatedSpaceUsed
+	m["space_used"] = finfo.SpaceUsed()
+	m["file_size"] = finfo.FileSize()
+
+	return m
+}
+
+func (k *kvStat) MarshalJSON() ([]byte, error) {
+	m := k.statsMap()
 	return json.Marshal(m)
 }

@@ -30,6 +30,7 @@ type Store struct {
 
 	statsMutex  sync.Mutex
 	statsHandle *forestdb.KVStore
+	stats       *kvStat
 }
 
 func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, error) {
@@ -75,6 +76,8 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 		return nil, err
 	}
 
+	rv.stats = &kvStat{s: &rv}
+
 	return &rv, nil
 }
 
@@ -102,9 +105,11 @@ func (s *Store) Reader() (store.KVReader, error) {
 }
 
 func (s *Store) Stats() json.Marshaler {
-	return &kvStat{
-		s: s,
-	}
+	return s.stats
+}
+
+func (s *Store) StatsMap() map[string]interface{} {
+	return s.stats.statsMap()
 }
 
 func (s *Store) Writer() (store.KVWriter, error) {
