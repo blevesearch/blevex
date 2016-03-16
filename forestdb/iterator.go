@@ -22,6 +22,7 @@ type Iterator struct {
 	curr     *forestdb.Doc
 	valid    bool
 	start    []byte
+	parent   *Reader
 }
 
 func (i *Iterator) Seek(key []byte) {
@@ -86,6 +87,9 @@ func (i *Iterator) Close() error {
 	i.valid = false
 	if i.curr != nil {
 		i.curr.Close()
+	}
+	if i.parent != nil {
+		i.parent.decRef()
 	}
 	return i.iterator.Close()
 }
