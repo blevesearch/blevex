@@ -10,6 +10,8 @@
 package forestdb
 
 import (
+	"sync"
+
 	"github.com/blevesearch/bleve/index/store"
 	"github.com/couchbase/goforestdb"
 )
@@ -18,6 +20,49 @@ type Reader struct {
 	store    *Store
 	kvstore  *forestdb.KVStore
 	snapshot *forestdb.KVStore
+	parent   *Reader
+	m        sync.Mutex // Protects the fields that follow.
+	refs     int
+}
+
+func (r *Reader) addRef() *Reader {
+	r.m.Lock()
+	r.refs++
+	r.m.Unlock()
+	return r
+}
+
+func (r *Reader) decRef() (rverr error) {
+	r.m.Lock()
+	r.refs--
+	refs := r.refs
+	r.m.Unlock()
+
+	if refs > 0 {
+		return nil
+	}
+
+	rverr = r.snapshot.Close()
+
+	if r.parent != nil {
+		err := r.parent.decRef()
+		if rverr != nil {
+			return rverr // return first error
+		}
+		return err
+	}
+
+	// only the "root", nil-parent Reader will return the kvstore to the kvpool.
+	// return to pool even error closing snapshot?
+	if r.kvstore != nil {
+		err := r.store.kvpool.Return(r.kvstore)
+		if rverr != nil {
+			return rverr // return first error
+		}
+		return err
+	}
+
+	return rverr
 }
 
 func (r *Reader) Get(key []byte) ([]byte, error) {
@@ -50,6 +95,7 @@ func (r *Reader) PrefixIterator(prefix []byte) store.KVIterator {
 		iterator: itr,
 		valid:    err == nil,
 		start:    prefix,
+		parent:   r.addRef(),
 	}
 	rv.Seek(prefix)
 	return &rv
@@ -66,22 +112,14 @@ func (r *Reader) RangeIterator(start, end []byte) store.KVIterator {
 		iterator: itr,
 		valid:    err == nil,
 		start:    start,
+		parent:   r.addRef(),
 	}
 	rv.Seek(start)
 	return &rv
 }
 
-func (r *Reader) Close() (rverr error) {
-	rverr = r.snapshot.Close()
-	//fixme review this
-	// return to pool even error closing snapshot?
-	if r.kvstore != nil {
-		err := r.store.kvpool.Return(r.kvstore)
-		if rverr == nil && err != nil {
-			rverr = err // return first error
-		}
-	}
-	return
+func (r *Reader) Close() error {
+	return r.decRef()
 }
 
 // Reader method allows cloning of a snapshot for multi-threaded use
@@ -94,5 +132,7 @@ func (r *Reader) Reader() (store.KVReader, error) {
 		store:    r.store,
 		kvstore:  nil, // dont return to pool, since this is a clone
 		snapshot: snapshot,
+		parent:   r.addRef(),
+		refs:     1,
 	}, nil
 }

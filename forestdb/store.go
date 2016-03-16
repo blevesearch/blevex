@@ -101,6 +101,8 @@ func (s *Store) Reader() (store.KVReader, error) {
 		store:    s,
 		kvstore:  kvstore,
 		snapshot: snapshot,
+		parent:   nil,
+		refs:     1,
 	}, nil
 }
 
