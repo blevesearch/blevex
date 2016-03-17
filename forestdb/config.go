@@ -9,6 +9,9 @@ import (
 func applyConfig(c *forestdb.Config, config map[string]interface{}) (
 	*forestdb.Config, error) {
 
+	if v, exists := config["autoCommit"].(bool); exists {
+		c.SetAutoCommit(v)
+	}
 	if v, exists := config["blockSize"].(float64); exists {
 		c.SetBlockSize(uint32(v))
 	}
@@ -46,6 +49,18 @@ func applyConfig(c *forestdb.Config, config map[string]interface{}) (
 	}
 	if v, exists := config["compressDocumentBody"].(bool); exists {
 		c.SetCompressDocumentBody(v)
+	}
+	if v, exists := config["multiKVInstances"].(bool); exists {
+		c.SetMultiKVInstances(v)
+	}
+	if v, exists := config["prefetchDuration"].(float64); exists {
+		c.SetPrefetchDuration(uint64(v))
+	}
+	if v, exists := config["numWalPartitions"].(float64); exists {
+		c.SetNumWalPartitions(uint16(v))
+	}
+	if v, exists := config["numBcachePartitions"].(float64); exists {
+		c.SetNumBcachePartitions(uint16(v))
 	}
 	if v, exists := config["durabilityOpt"].(string); exists {
 		switch v {
@@ -88,6 +103,18 @@ func applyConfig(c *forestdb.Config, config map[string]interface{}) (
 	}
 	if v, exists := config["maxWriterLockProb"].(float64); exists {
 		c.SetMaxWriterLockProb(uint8(v))
+	}
+	if v, exists := config["numCompactorThreads"].(float64); exists {
+		c.SetNumCompactorThreads(int(v))
+	}
+	if v, exists := config["numBgflusherThreads"].(float64); exists {
+		c.SetNumBgflusherThreads(int(v))
+	}
+	if v, exists := config["numBlockReusingThreshold"].(float64); exists {
+		c.SetNumBlockReusingThreshold(int(v))
+	}
+	if v, exists := config["numKeepingHeaders"].(float64); exists {
+		c.SetNumKeepingHeaders(int(v))
 	}
 	return c, nil
 }
