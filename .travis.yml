@@ -11,7 +11,6 @@ before_install:
  - sudo apt-get update -qq
  - sudo apt-get install g++-4.8 libsnappy-dev zlib1g-dev libbz2-dev cmake-data cmake -qq
  - export CXX="g++-4.8" CC="gcc-4.8"
- - icu-config --version
 
 install:
   - cmake -version
@@ -22,6 +21,16 @@ install:
   - export CGO_CFLAGS="-I${LEVELDB}/include/ -I${ROCKSDB}/include/ -I${FORESTDB}/include"
   - export CGO_LDFLAGS="-L${LEVELDB} -L${ROCKSDB} -L${FORESTDB}/build -lrocksdb -lstdc++ -lm -lz -lbz2 -lsnappy"
   - export LD_LIBRARY_PATH="${LEVELDB}:${ROCKSDB}:${FORESTDB}/build"
+  # get and build icu 57.1
+  - cd
+  - curl -sLO http://download.icu-project.org/files/icu4c/57.1/icu4c-57_1-src.tgz
+  - tar zxvf icu4c-57_1-src.tgz
+  - cd icu/source
+  - chmod +x runConfigureICU configure install-sh
+  - ./runConfigureICU
+  - make
+  - sudo make install
+  - icu-config --version
   # get and build leveldb 1.18
   - cd
   - curl -sLO https://github.com/google/leveldb/archive/v1.18.tar.gz
