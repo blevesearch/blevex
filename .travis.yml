@@ -31,10 +31,8 @@ install:
   - make
   - sudo make install
   - icu-config --version
-  - icu-config --ldflags
   - export ICU_LD_FLAGS=`icu-config --ldflags`
   - export CGO_LDFLAGS="${CGO_LDFLAGS} ${ICU_LD_FLAGS}"
-  - echo ${CGO_LDFLAGS}
   # get and build leveldb 1.18
   - cd
   - curl -sLO https://github.com/google/leveldb/archive/v1.18.tar.gz
