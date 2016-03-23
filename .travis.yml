@@ -12,6 +12,7 @@ before_install:
  - export CXX="g++-4.8" CC="gcc-4.8"
 
 install:
+  - cmake -version
   - export SNAPPY_DIR=$HOME/snappy-1.1.3
   - export LEVELDB=$HOME/leveldb-1.18
   - export FORESTDB=$HOME/forestdb-master
