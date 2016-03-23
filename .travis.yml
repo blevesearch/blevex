@@ -19,7 +19,7 @@ install:
   - export ROCKSDB=$HOME/rocksdb-4.3.1
   - export FORESTDB=$HOME/forestdb-master
   - export CGO_CFLAGS="-I${LEVELDB}/include/ -I${ROCKSDB}/include/ -I${FORESTDB}/include"
-  - export CGO_LDFLAGS="-L${LEVELDB} -L${ROCKSDB} -L${FORESTDB}/build"
+  - export CGO_LDFLAGS="-L${LEVELDB} -L${ROCKSDB} -L${FORESTDB}/build -lrocksdb -lstdc++ -lm -lz -lbz2 -lsnappy"
   - export LD_LIBRARY_PATH="${LEVELDB}:${ROCKSDB}:${FORESTDB}/build"
   # get and build leveldb 1.18
   - cd
