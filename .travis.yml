@@ -20,7 +20,7 @@ install:
   - export FORESTDB=$HOME/forestdb-master
   - export CGO_CFLAGS="-I${LEVELDB}/include/ -I${ROCKSDB}/include/ -I${FORESTDB}/include"
   - export CGO_LDFLAGS="-L${LEVELDB} -L${ROCKSDB} -L${FORESTDB}/build -lrocksdb -lstdc++ -lm -lz -lbz2 -lsnappy"
-  - export LD_LIBRARY_PATH="${LEVELDB}:${ROCKSDB}:${FORESTDB}/build"
+  - export LD_LIBRARY_PATH="${LEVELDB}:${ROCKSDB}:${FORESTDB}/build:/usr/local/lib"
   # get and build icu 57.1
   - cd
   - curl -sLO http://download.icu-project.org/files/icu4c/57.1/icu4c-57_1-src.tgz
