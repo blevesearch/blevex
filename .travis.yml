@@ -27,7 +27,7 @@ install:
   - tar zxvf icu4c-57_1-src.tgz
   - cd icu/source
   - chmod +x runConfigureICU configure install-sh
-  - ./runConfigureICU
+  - ./runConfigureICU Linux/gcc
   - make
   - sudo make install
   - icu-config --version
