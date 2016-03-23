@@ -71,6 +71,7 @@ script:
   - go test -v github.com/blevesearch/blevex/lang/fr
   - go test -v github.com/blevesearch/blevex/lang/hu
   - go test -v github.com/blevesearch/blevex/lang/it
+  - go test -v github.com/blevesearch/blevex/lang/ja
   - go test -v github.com/blevesearch/blevex/lang/nl
   - go test -v github.com/blevesearch/blevex/lang/no
   - go test -v github.com/blevesearch/blevex/lang/pt
