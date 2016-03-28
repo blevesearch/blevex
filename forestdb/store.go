@@ -20,12 +20,15 @@ import (
 )
 
 const Name = "forestdb"
-const DefaultConcurrent = 10
+
+// DefaultConcurrent is the default kvpool size.  When 0, don't use
+// kvpool (0 is the default).
+var DefaultConcurrent = 0
 
 type Store struct {
 	m      sync.RWMutex
 	path   string
-	kvpool *forestdb.KVPool
+	kvpool *forestdb.KVPool // May be nil if kvpool disabled.
 	mo     store.MergeOperator
 
 	fdbConfig *forestdb.Config
@@ -56,30 +59,41 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 		kvsConfig.SetCreateIfMissing(true)
 	}
 
+	var kvpool *forestdb.KVPool
+	var statsHandle *forestdb.KVStore
+
 	numConcurrent := DefaultConcurrent
 	if nc, ok := config["num_concurrent"].(float64); ok {
 		numConcurrent = int(nc)
 	}
+	if numConcurrent > 0 {
+		// request 1 extra connection in pool to be reserved for issuing
+		// stats calls
+		kvpool, err := forestdb.NewKVPool(path, fdbConfig, "default", kvsConfig,
+			numConcurrent+1)
+		if err != nil {
+			return nil, err
+		}
 
-	// request 1 extra connection in pool to be reserved for issuing
-	// stats calls
-	kvpool, err := forestdb.NewKVPool(path, fdbConfig,
-		"default", kvsConfig, numConcurrent+1)
-	if err != nil {
-		return nil, err
+		statsHandle, err = kvpool.Get()
+		if err != nil {
+			kvpool.Close()
+			return nil, err
+		}
+	} else {
+		statsHandle, err = forestdb.OpenFileKVStore(path, fdbConfig, "default", kvsConfig)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	rv := Store{
-		path:      path,
-		kvpool:    kvpool,
-		mo:        mo,
-		fdbConfig: fdbConfig,
-		kvsConfig: kvsConfig,
-	}
-
-	rv.statsHandle, err = kvpool.Get()
-	if err != nil {
-		return nil, err
+		path:        path,
+		kvpool:      kvpool,
+		mo:          mo,
+		fdbConfig:   fdbConfig,
+		kvsConfig:   kvsConfig,
+		statsHandle: statsHandle,
 	}
 
 	rv.stats = &kvStat{s: &rv}
@@ -89,13 +103,17 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 
 func (s *Store) Close() error {
 	if s.statsHandle != nil {
-		s.kvpool.Return(s.statsHandle)
+		s.returnKVStore(s.statsHandle)
+		s.statsHandle = nil
 	}
-	return s.kvpool.Close()
+	if s.kvpool != nil {
+		return s.kvpool.Close()
+	}
+	return nil
 }
 
 func (s *Store) Reader() (store.KVReader, error) {
-	kvstore, err := s.kvpool.Get()
+	kvstore, err := s.acquireKVStore()
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +139,7 @@ func (s *Store) StatsMap() map[string]interface{} {
 }
 
 func (s *Store) Writer() (store.KVWriter, error) {
-	kvstore, err := s.kvpool.Get()
+	kvstore, err := s.acquireKVStore()
 	if err != nil {
 		return nil, err
 	}
@@ -131,8 +149,18 @@ func (s *Store) Writer() (store.KVWriter, error) {
 	}, nil
 }
 
+func (s *Store) acquireKVStore() (*forestdb.KVStore, error) {
+	if s.kvpool != nil {
+		return s.kvpool.Get()
+	}
+	return forestdb.OpenFileKVStore(s.path, s.fdbConfig, "default", s.kvsConfig)
+}
+
 func (s *Store) returnKVStore(kvs *forestdb.KVStore) error {
-	return s.kvpool.Return(kvs)
+	if s.kvpool != nil {
+		return s.kvpool.Return(kvs)
+	}
+	return forestdb.CloseFileKVStore(kvs)
 }
 
 func init() {
