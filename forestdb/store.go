@@ -125,6 +125,10 @@ func (s *Store) Writer() (store.KVWriter, error) {
 	}, nil
 }
 
+func (s *Store) returnKVStore(kvs *forestdb.KVStore) error {
+	return s.kvpool.Return(kvs)
+}
+
 func init() {
 	registry.RegisterKVStore(Name, New)
 }

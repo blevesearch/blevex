@@ -55,7 +55,7 @@ func (r *Reader) decRef() (rverr error) {
 	// only the "root", nil-parent Reader will return the kvstore to the kvpool.
 	// return to pool even error closing snapshot?
 	if r.kvstore != nil {
-		err := r.store.kvpool.Return(r.kvstore)
+		err := r.store.returnKVStore(r.kvstore)
 		if rverr != nil {
 			return rverr // return first error
 		}
