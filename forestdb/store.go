@@ -28,6 +28,9 @@ type Store struct {
 	kvpool *forestdb.KVPool
 	mo     store.MergeOperator
 
+	fdbConfig *forestdb.Config
+	kvsConfig *forestdb.KVStoreConfig
+
 	statsMutex  sync.Mutex
 	statsHandle *forestdb.KVStore
 	stats       *kvStat
@@ -40,17 +43,17 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 		return nil, fmt.Errorf("must specify path")
 	}
 
-	forestDBDefaultConfig := forestdb.DefaultConfig()
-	forestDBDefaultConfig.SetCompactionMode(forestdb.COMPACT_AUTO)
-	forestDBDefaultConfig.SetMultiKVInstances(false)
-	forestDBConfig, err := applyConfig(forestDBDefaultConfig, config)
+	fdbDefaultConfig := forestdb.DefaultConfig()
+	fdbDefaultConfig.SetCompactionMode(forestdb.COMPACT_AUTO)
+	fdbDefaultConfig.SetMultiKVInstances(false)
+	fdbConfig, err := applyConfig(fdbDefaultConfig, config)
 	if err != nil {
 		return nil, err
 	}
 
-	kvconfig := forestdb.DefaultKVStoreConfig()
+	kvsConfig := forestdb.DefaultKVStoreConfig()
 	if cim, ok := config["create_if_missing"].(bool); ok && cim {
-		kvconfig.SetCreateIfMissing(true)
+		kvsConfig.SetCreateIfMissing(true)
 	}
 
 	numConcurrent := DefaultConcurrent
@@ -60,15 +63,18 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 
 	// request 1 extra connection in pool to be reserved for issuing
 	// stats calls
-	kvpool, err := forestdb.NewKVPool(path, forestDBConfig, "default", kvconfig, numConcurrent+1)
+	kvpool, err := forestdb.NewKVPool(path, fdbConfig,
+		"default", kvsConfig, numConcurrent+1)
 	if err != nil {
 		return nil, err
 	}
 
 	rv := Store{
-		path:   path,
-		mo:     mo,
-		kvpool: kvpool,
+		path:      path,
+		kvpool:    kvpool,
+		mo:        mo,
+		fdbConfig: fdbConfig,
+		kvsConfig: kvsConfig,
 	}
 
 	rv.statsHandle, err = kvpool.Get()
