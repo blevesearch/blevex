@@ -75,5 +75,5 @@ func (w *Writer) ExecuteBatch(b store.KVBatch) error {
 }
 
 func (w *Writer) Close() error {
-	return w.store.kvpool.Return(w.kvstore)
+	return w.store.returnKVStore(w.kvstore)
 }
