@@ -19,6 +19,10 @@ func (k *kvStat) statsMap() map[string]interface{} {
 	k.s.statsMutex.Lock()
 	defer k.s.statsMutex.Unlock()
 
+	if k.s.statsHandle == nil {
+		return map[string]interface{}{}
+	}
+
 	f := k.s.statsHandle.File()
 	finfo, err := f.Info()
 	if err != nil {
