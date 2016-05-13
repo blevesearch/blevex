@@ -37,6 +37,8 @@ type Store struct {
 	statsMutex  sync.Mutex
 	statsHandle *forestdb.KVStore
 	stats       *kvStat
+
+	skipBatch bool
 }
 
 func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, error) {
@@ -87,6 +89,11 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 		}
 	}
 
+	var skipBatch bool
+	if skipBatchV, ok := config["skip_batch"].(bool); ok {
+		skipBatch = skipBatchV
+	}
+
 	rv := Store{
 		path:        path,
 		kvpool:      kvpool,
@@ -94,6 +101,7 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 		fdbConfig:   fdbConfig,
 		kvsConfig:   kvsConfig,
 		statsHandle: statsHandle,
+		skipBatch:   skipBatch,
 	}
 
 	rv.stats = &kvStat{s: &rv}

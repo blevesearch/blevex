@@ -18,13 +18,29 @@ type Batch struct {
 	w     *Writer
 	merge *store.EmulatedMerge
 	batch *forestdb.KVBatch
+
+	skipBatchErr error
 }
 
 func (b *Batch) Set(key, val []byte) {
+	if b.w.store.skipBatch {
+		err := b.w.kvstore.SetKV(key, val)
+		if err != nil && b.skipBatchErr == nil {
+			b.skipBatchErr = err
+		}
+		return
+	}
 	b.batch.Set(key, val)
 }
 
 func (b *Batch) Delete(key []byte) {
+	if b.w.store.skipBatch {
+		err := b.w.kvstore.DeleteKV(key)
+		if err != nil && b.skipBatchErr == nil {
+			b.skipBatchErr = err
+		}
+		return
+	}
 	b.batch.Delete(key)
 }
 
@@ -35,6 +51,7 @@ func (b *Batch) Merge(key, val []byte) {
 func (b *Batch) Reset() {
 	b.batch.Reset()
 	b.merge = store.NewEmulatedMerge(b.w.store.mo)
+	b.skipBatchErr = nil
 }
 
 func (b *Batch) Close() error {
