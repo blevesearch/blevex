@@ -71,6 +71,13 @@ func (w *Writer) ExecuteBatch(b store.KVBatch) error {
 		batch.Set(k, mergedVal)
 	}
 
+	if w.store.skipBatch {
+		if batch.skipBatchErr != nil {
+			return batch.skipBatchErr
+		}
+		return w.kvstore.File().Commit(forestdb.COMMIT_NORMAL)
+	}
+
 	return w.kvstore.ExecuteBatch(batch.batch, forestdb.COMMIT_NORMAL)
 }
 
