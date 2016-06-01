@@ -29,8 +29,11 @@ func (w *Writer) NewBatch() store.KVBatch {
 }
 
 func (w *Writer) NewBatchEx(options store.KVBatchOptions) ([]byte, store.KVBatch, error) {
-	rv := newBatchEx(options)
-	return rv.buf, rv, nil
+	// Disabled due to https://github.com/blevesearch/blevex/issues/22
+	// rv := newBatchEx(options)
+	// return rv.buf, rv, nil
+
+	return make([]byte, options.TotalBytes), w.NewBatch(), nil
 }
 
 func (w *Writer) ExecuteBatch(b store.KVBatch) error {
