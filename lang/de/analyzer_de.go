@@ -27,7 +27,7 @@ func AnalyzerConstructor(config map[string]interface{}, cache *registry.Cache) (
 	if err != nil {
 		return nil, err
 	}
-	stopDeFilter, err := cache.TokenFilterNamed(NormalizeName)
+	stopDeFilter, err := cache.TokenFilterNamed(StopName)
 	if err != nil {
 		return nil, err
 	}
