@@ -285,11 +285,6 @@ func applyConfig(o *gorocksdb.Options, config map[string]interface{}) (
 		o.SetVerifyChecksumsInCompaction(vcic)
 	}
 
-	fd, ok := config["filter_deletes"].(bool)
-	if ok {
-		o.SetFilterDeletes(fd)
-	}
-
 	mssii, ok := config["max_sequential_skip_in_iterations"].(float64)
 	if ok {
 		o.SetMaxSequentialSkipInIterations(uint64(mssii))
