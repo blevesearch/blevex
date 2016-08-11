@@ -16,7 +16,7 @@ install:
   - cmake -version
   - export SNAPPY_DIR=$HOME/snappy-1.1.3
   - export LEVELDB=$HOME/leveldb-1.18
-  - export ROCKSDB=$HOME/rocksdb-4.3.1
+  - export ROCKSDB=$HOME/rocksdb-4.8
   - export FORESTDB=$HOME/forestdb-master
   - export CGO_CFLAGS="-I${LEVELDB}/include/ -I${ROCKSDB}/include/ -I${FORESTDB}/include"
   - export CGO_LDFLAGS="-L${LEVELDB} -L${ROCKSDB} -L${FORESTDB}/build -lrocksdb -lstdc++ -lm -lz -lbz2 -lsnappy"
@@ -48,9 +48,9 @@ install:
   - sudo make install
   # get and build rocksdb
   - cd
-  - curl -sLO https://github.com/facebook/rocksdb/archive/v4.3.1.tar.gz
-  - tar zxvf v4.3.1.tar.gz
-  - cd rocksdb-4.3.1
+  - curl -sLO https://github.com/facebook/rocksdb/archive/v4.8.tar.gz
+  - tar zxvf v4.8.tar.gz
+  - cd rocksdb-4.8
   - make shared_lib
   # get and build forestdb master
   - cd
