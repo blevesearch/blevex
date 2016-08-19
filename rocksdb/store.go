@@ -60,7 +60,7 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 		return nil, err
 	}
 
-	b, ok := config["readonly"].(bool)
+	b, ok := config["read_only"].(bool)
 	if ok && b {
 		rv.db, err = gorocksdb.OpenDbForReadOnly(rv.opts, rv.path, false)
 	} else {
