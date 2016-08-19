@@ -60,12 +60,18 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 		return nil, err
 	}
 
-	rv.db, err = gorocksdb.OpenDb(rv.opts, rv.path)
+	b, ok := config["readonly"].(bool)
+	if ok && b {
+		rv.db, err = gorocksdb.OpenDbForReadOnly(rv.opts, rv.path, false)
+	} else {
+		rv.db, err = gorocksdb.OpenDb(rv.opts, rv.path)
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	b, ok := config["readoptions_verify_checksum"].(bool)
+	b, ok = config["readoptions_verify_checksum"].(bool)
 	if ok {
 		rv.roptVerifyChecksums, rv.roptVerifyChecksumsUse = b, true
 	}
