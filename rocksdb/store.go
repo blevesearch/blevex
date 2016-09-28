@@ -11,6 +11,7 @@ package rocksdb
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/blevesearch/bleve/index/store"
 	"github.com/blevesearch/bleve/registry"
@@ -43,6 +44,9 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 	path, ok := config["path"].(string)
 	if !ok {
 		return nil, fmt.Errorf("must specify path")
+	}
+	if path == "" {
+		return nil, os.ErrInvalid
 	}
 
 	rv := Store{

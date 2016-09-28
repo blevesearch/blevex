@@ -12,6 +12,7 @@ package forestdb
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"sync"
 
 	"github.com/blevesearch/bleve/index/store"
@@ -46,6 +47,9 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 	path, ok := config["path"].(string)
 	if !ok {
 		return nil, fmt.Errorf("must specify path")
+	}
+	if path == "" {
+		return nil, os.ErrInvalid
 	}
 
 	fdbDefaultConfig := forestdb.DefaultConfig()
