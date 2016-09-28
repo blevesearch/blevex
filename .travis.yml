@@ -77,6 +77,7 @@ script:
   - go test -v github.com/blevesearch/blevex/leveldb
   - go test -v github.com/blevesearch/blevex/rocksdb
   - go test -v github.com/blevesearch/blevex/forestdb
+  - go test -v github.com/blevesearch/blevex/preload
   - go test -v github.com/blevesearch/blevex/detect_lang
   - go test -v github.com/blevesearch/blevex/stemmer_filter
   - go test -v github.com/blevesearch/blevex/icu

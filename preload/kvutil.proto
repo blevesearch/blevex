@@ -1,0 +1,6 @@
+package preload;
+
+message KVPair {
+	required bytes k = 1;
+	required bytes v = 2;
+}
