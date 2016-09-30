@@ -11,8 +11,8 @@ package de
 
 import (
 	"github.com/blevesearch/bleve/analysis"
-	"github.com/blevesearch/bleve/analysis/token_filters/lower_case_filter"
 	"github.com/blevesearch/bleve/analysis/tokenizers/unicode"
+	"github.com/blevesearch/bleve/analysis/tokens/lowercase"
 	"github.com/blevesearch/bleve/registry"
 )
 
@@ -23,7 +23,7 @@ func AnalyzerConstructor(config map[string]interface{}, cache *registry.Cache) (
 	if err != nil {
 		return nil, err
 	}
-	toLowerFilter, err := cache.TokenFilterNamed(lower_case_filter.Name)
+	toLowerFilter, err := cache.TokenFilterNamed(lowercase.Name)
 	if err != nil {
 		return nil, err
 	}

@@ -11,7 +11,7 @@ package ja
 
 import (
 	"github.com/blevesearch/bleve/analysis"
-	"github.com/blevesearch/bleve/analysis/token_filters/unicode_normalize"
+	"github.com/blevesearch/bleve/analysis/tokens/unicodenorm"
 	"github.com/blevesearch/bleve/registry"
 )
 
@@ -22,7 +22,7 @@ func AnalyzerConstructor(config map[string]interface{}, cache *registry.Cache) (
 	if err != nil {
 		return nil, err
 	}
-	normalizeFilter := unicode_normalize.MustNewUnicodeNormalizeFilter(unicode_normalize.NFKD)
+	normalizeFilter := unicodenorm.MustNewUnicodeNormalizeFilter(unicodenorm.NFKD)
 	rv := analysis.Analyzer{
 		Tokenizer: kagomeTokenizer,
 		TokenFilters: []analysis.TokenFilter{

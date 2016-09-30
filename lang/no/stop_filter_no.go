@@ -11,7 +11,7 @@ package no
 
 import (
 	"github.com/blevesearch/bleve/analysis"
-	"github.com/blevesearch/bleve/analysis/token_filters/stop_tokens_filter"
+	"github.com/blevesearch/bleve/analysis/tokens/stop"
 	"github.com/blevesearch/bleve/registry"
 )
 
@@ -20,7 +20,7 @@ func StopTokenFilterConstructor(config map[string]interface{}, cache *registry.C
 	if err != nil {
 		return nil, err
 	}
-	return stop_tokens_filter.NewStopTokensFilter(tokenMap), nil
+	return stop.NewStopTokensFilter(tokenMap), nil
 }
 
 func init() {

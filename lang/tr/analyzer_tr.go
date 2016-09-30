@@ -13,9 +13,9 @@ import (
 	"github.com/blevesearch/bleve/analysis"
 	"github.com/blevesearch/bleve/registry"
 
-	"github.com/blevesearch/bleve/analysis/token_filters/apostrophe_filter"
-	"github.com/blevesearch/bleve/analysis/token_filters/lower_case_filter"
 	"github.com/blevesearch/bleve/analysis/tokenizers/unicode"
+	"github.com/blevesearch/bleve/analysis/tokens/apostrophe"
+	"github.com/blevesearch/bleve/analysis/tokens/lowercase"
 )
 
 const AnalyzerName = "tr"
@@ -25,11 +25,11 @@ func AnalyzerConstructor(config map[string]interface{}, cache *registry.Cache) (
 	if err != nil {
 		return nil, err
 	}
-	aposFilter, err := cache.TokenFilterNamed(apostrophe_filter.Name)
+	aposFilter, err := cache.TokenFilterNamed(apostrophe.Name)
 	if err != nil {
 		return nil, err
 	}
-	toLowerFilter, err := cache.TokenFilterNamed(lower_case_filter.Name)
+	toLowerFilter, err := cache.TokenFilterNamed(lowercase.Name)
 	if err != nil {
 		return nil, err
 	}
