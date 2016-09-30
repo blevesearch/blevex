@@ -12,13 +12,13 @@ package fi
 import (
 	"github.com/blevesearch/bleve/analysis"
 	"github.com/blevesearch/bleve/registry"
-	"github.com/blevesearch/blevex/stemmer_filter"
+	"github.com/blevesearch/blevex/stemmer"
 )
 
 const StemmerName = "stemmer_fi"
 
 func StemmerFilterConstructor(config map[string]interface{}, cache *registry.Cache) (analysis.TokenFilter, error) {
-	return stemmer_filter.NewStemmerFilter("fi")
+	return stemmer.NewStemmerFilter("fi")
 }
 
 func init() {
