@@ -11,8 +11,8 @@ package detectlang
 
 import (
 	"github.com/blevesearch/bleve/analysis"
-	"github.com/blevesearch/bleve/analysis/tokenizers/single"
-	"github.com/blevesearch/bleve/analysis/tokens/lowercase"
+	"github.com/blevesearch/bleve/analysis/token/lowercase"
+	"github.com/blevesearch/bleve/analysis/tokenizer/single"
 	"github.com/blevesearch/bleve/registry"
 )
 

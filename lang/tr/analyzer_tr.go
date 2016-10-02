@@ -13,9 +13,9 @@ import (
 	"github.com/blevesearch/bleve/analysis"
 	"github.com/blevesearch/bleve/registry"
 
-	"github.com/blevesearch/bleve/analysis/tokenizers/unicode"
-	"github.com/blevesearch/bleve/analysis/tokens/apostrophe"
-	"github.com/blevesearch/bleve/analysis/tokens/lowercase"
+	"github.com/blevesearch/bleve/analysis/token/apostrophe"
+	"github.com/blevesearch/bleve/analysis/token/lowercase"
+	"github.com/blevesearch/bleve/analysis/tokenizer/unicode"
 )
 
 const AnalyzerName = "tr"
