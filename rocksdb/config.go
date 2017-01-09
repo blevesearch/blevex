@@ -117,22 +117,7 @@ func applyConfig(o *gorocksdb.Options, config map[string]interface{}) (
 
 	mbflm, ok := config["max_bytes_for_level_multiplier"].(float64)
 	if ok {
-		o.SetMaxBytesForLevelMultiplier(int(mbflm))
-	}
-
-	ecf, ok := config["expanded_compaction_factor"].(float64)
-	if ok {
-		o.SetExpandedCompactionFactor(int(ecf))
-	}
-
-	scf, ok := config["source_compaction_factor"].(float64)
-	if ok {
-		o.SetSourceCompactionFactor(int(scf))
-	}
-
-	mgof, ok := config["max_grandparent_overlap_factor"].(float64)
-	if ok {
-		o.SetMaxGrandparentOverlapFactor(int(mgof))
+		o.SetMaxBytesForLevelMultiplier(mbflm)
 	}
 
 	dds, ok := config["disable_data_sync"].(bool)
