@@ -12,7 +12,7 @@ package stemmer
 import (
 	"fmt"
 
-	"bitbucket.org/tebeka/snowball"
+	"github.com/tebeka/snowball"
 	"github.com/blevesearch/bleve/analysis"
 	"github.com/blevesearch/bleve/registry"
 )
