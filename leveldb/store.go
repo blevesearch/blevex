@@ -81,6 +81,11 @@ func (s *Store) Writer() (store.KVWriter, error) {
 	}, nil
 }
 
+func (s *Store) Compact() error {
+	s.db.CompactRange(levigo.Range{})
+	return nil
+}
+
 func init() {
 	registry.RegisterKVStore(Name, New)
 }
