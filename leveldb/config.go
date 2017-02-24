@@ -42,5 +42,10 @@ func applyConfig(o *levigo.Options, config map[string]interface{}) (
 		o.SetFilterPolicy(bf)
 	}
 
+	mof, ok := config["max_open_files"].(float64)
+	if ok {
+		o.SetMaxOpenFiles(int(mof))
+	}
+
 	return o, nil
 }
