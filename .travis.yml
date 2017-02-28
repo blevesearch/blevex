@@ -48,9 +48,9 @@ install:
   - sudo make install
   # get and build rocksdb
   - cd
-  - curl -sLO https://github.com/facebook/rocksdb/archive/v5.0.1.tar.gz
-  - tar zxvf v5.0.1.tar.gz
-  - cd rocksdb-5.0.1
+  - curl -sLO https://github.com/facebook/rocksdb/archive/v5.1.4.tar.gz
+  - tar zxvf v5.1.4.tar.gz
+  - cd rocksdb-5.1.4
   - make shared_lib
   # get and build forestdb master
   - cd
