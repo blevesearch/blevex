@@ -10,6 +10,7 @@
 package leveldb
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/blevesearch/bleve/index/store"
@@ -63,7 +64,12 @@ func (w *Writer) ExecuteBatch(b store.KVBatch) error {
 		if !fullMergeOk {
 			return fmt.Errorf("unable to merge")
 		}
-		batch.Set(k, mergedVal)
+
+		if bytes.Equal(mergedVal, []byte{0}) {
+			batch.Delete(k)
+		} else {
+			batch.Set(k, mergedVal)
+		}
 	}
 
 	err := w.store.db.Write(w.options, batch.batch)
