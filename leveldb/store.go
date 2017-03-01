@@ -69,7 +69,7 @@ func (s *Store) Reader() (store.KVReader, error) {
 	options.SetSnapshot(snapshot)
 	return &Reader{
 		store:    s,
-		snapshot: s.db.NewSnapshot(),
+		snapshot: snapshot,
 		options:  options,
 	}, nil
 }
