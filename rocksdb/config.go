@@ -120,11 +120,6 @@ func applyConfig(o *gorocksdb.Options, config map[string]interface{}) (
 		o.SetMaxBytesForLevelMultiplier(mbflm)
 	}
 
-	dds, ok := config["disable_data_sync"].(bool)
-	if ok {
-		o.SetDisableDataSync(dds)
-	}
-
 	uf, ok := config["use_fsync"].(bool)
 	if ok {
 		o.SetUseFsync(uf)
@@ -213,11 +208,6 @@ func applyConfig(o *gorocksdb.Options, config map[string]interface{}) (
 	prkwf, ok := config["purge_redundant_kvs_while_flush"].(bool)
 	if ok {
 		o.SetPurgeRedundantKvsWhileFlush(prkwf)
-	}
-
-	aob, ok := config["allow_os_buffer"].(bool)
-	if ok {
-		o.SetAllowOsBuffer(aob)
 	}
 
 	amr, ok := config["allow_mmap_reads"].(bool)
