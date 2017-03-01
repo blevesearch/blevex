@@ -16,7 +16,7 @@ install:
   - cmake -version
   - export SNAPPY_DIR=$HOME/snappy-1.1.3
   - export LEVELDB=$HOME/leveldb-1.18
-  - export ROCKSDB=$HOME/rocksdb-5.0.1
+  - export ROCKSDB=$HOME/rocksdb-5.1.4
   - export FORESTDB=$HOME/forestdb-master
   - export CGO_CFLAGS="-I${LEVELDB}/include/ -I${ROCKSDB}/include/ -I${FORESTDB}/include"
   - export CGO_LDFLAGS="-L${LEVELDB} -L${ROCKSDB} -L${FORESTDB}/build -lrocksdb -lstdc++ -lm -lz -lbz2 -lsnappy"
