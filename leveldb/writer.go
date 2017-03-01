@@ -50,6 +50,7 @@ func (w *Writer) ExecuteBatch(b store.KVBatch) error {
 	snapshot := w.store.db.NewSnapshot()
 	ro := defaultReadOptions()
 	ro.SetSnapshot(snapshot)
+	defer w.store.db.ReleaseSnapshot(snapshot)
 	defer ro.Close()
 
 	for key, mergeOps := range batch.merge.Merges {
