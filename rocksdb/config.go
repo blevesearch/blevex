@@ -255,11 +255,6 @@ func applyConfig(o *gorocksdb.Options, config map[string]interface{}) (
 		o.SetCompactionStyle(gorocksdb.CompactionStyle(uint(cs)))
 	}
 
-	vcic, ok := config["verify_checksums_in_compaction"].(bool)
-	if ok {
-		o.SetVerifyChecksumsInCompaction(vcic)
-	}
-
 	mssii, ok := config["max_sequential_skip_in_iterations"].(float64)
 	if ok {
 		o.SetMaxSequentialSkipInIterations(uint64(mssii))
