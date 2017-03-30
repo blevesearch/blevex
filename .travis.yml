@@ -17,10 +17,9 @@ install:
   - export SNAPPY_DIR=$HOME/snappy-1.1.3
   - export LEVELDB=$HOME/leveldb-1.18
   - export ROCKSDB=$HOME/rocksdb-5.1.4
-  - export FORESTDB=$HOME/forestdb-master
-  - export CGO_CFLAGS="-I${LEVELDB}/include/ -I${ROCKSDB}/include/ -I${FORESTDB}/include"
-  - export CGO_LDFLAGS="-L${LEVELDB} -L${ROCKSDB} -L${FORESTDB}/build -lrocksdb -lstdc++ -lm -lz -lbz2 -lsnappy"
-  - export LD_LIBRARY_PATH="${LEVELDB}:${ROCKSDB}:${FORESTDB}/build:/usr/local/lib"
+  - export CGO_CFLAGS="-I${LEVELDB}/include/ -I${ROCKSDB}/include/"
+  - export CGO_LDFLAGS="-L${LEVELDB} -L${ROCKSDB} -lrocksdb -lstdc++ -lm -lz -lbz2 -lsnappy"
+  - export LD_LIBRARY_PATH="${LEVELDB}:${ROCKSDB}:/usr/local/lib"
   # get and build icu 57.1
   - cd
   - curl -sLO http://download.icu-project.org/files/icu4c/57.1/icu4c-57_1-src.tgz
@@ -52,19 +51,9 @@ install:
   - tar zxvf v5.1.4.tar.gz
   - cd rocksdb-5.1.4
   - make shared_lib
-  # get and build forestdb master
-  - cd
-  - curl -sLO https://github.com/couchbase/forestdb/archive/master.zip
-  - unzip master.zip
-  - cd forestdb-master
-  - mkdir build
-  - cd build
-  - cmake ..
-  - make
   # fetch all necessary go deps
   - cd
   - go get github.com/blevesearch/blevex/leveldb/...
-  - go get github.com/blevesearch/blevex/forestdb/...
   - go get github.com/blevesearch/blevex/rocksdb/...
   - go get github.com/blevesearch/blevex/preload/...
   - go get github.com/blevesearch/blevex/stemmer/...
@@ -78,7 +67,6 @@ script:
   - go test -v github.com/blevesearch/blevex/cznicb
   - go test -v github.com/blevesearch/blevex/leveldb
   - go test -v github.com/blevesearch/blevex/rocksdb
-  - go test -v github.com/blevesearch/blevex/forestdb
   - go test -v github.com/blevesearch/blevex/preload
   - go test -v github.com/blevesearch/blevex/detectlang
   - go test -v github.com/blevesearch/blevex/stemmer
