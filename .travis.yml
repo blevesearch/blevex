@@ -3,7 +3,11 @@ sudo: required
 language: go
 
 go:
- - 1.5
+ - 1.5.x
+ - 1.6.x
+ - 1.7.x
+ - 1.8.x
+ - 1.9.x
 
 before_install:
  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
