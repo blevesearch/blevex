@@ -55,6 +55,6 @@ func (r *Reader) RangeIterator(start, end []byte) store.KVIterator {
 
 func (r *Reader) Close() error {
 	r.options.Destroy()
-	r.snapshot.Release()
+	r.store.db.ReleaseSnapshot(r.snapshot)
 	return nil
 }
