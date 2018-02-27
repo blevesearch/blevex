@@ -19,7 +19,7 @@ install:
   - cmake -version
   - export SNAPPY_DIR=$HOME/snappy-1.1.3
   - export LEVELDB=$HOME/leveldb-1.18
-  - export ROCKSDB=$HOME/rocksdb-5.10.3
+  - export ROCKSDB=$HOME/rocksdb-master
   - export CGO_CFLAGS="-I${LEVELDB}/include/ -I${ROCKSDB}/include/"
   - export CGO_LDFLAGS="-L${LEVELDB} -L${ROCKSDB} -lrocksdb -lstdc++ -lm -lz -lbz2 -lsnappy"
   - export LD_LIBRARY_PATH="${LEVELDB}:${ROCKSDB}:/usr/local/lib"
@@ -50,9 +50,9 @@ install:
   - sudo make install
   # get and build rocksdb
   - cd
-  - curl -sLO https://github.com/facebook/rocksdb/archive/v5.10.3.tar.gz
-  - tar zxvf v5.10.3.tar.gz
-  - cd rocksdb-5.10.3
+  - curl -sLO https://github.com/facebook/rocksdb/archive/master.zip
+  - unzip master.zip
+  - cd rocksdb-master
   - make shared_lib
   # fetch all necessary go deps
   - cd
