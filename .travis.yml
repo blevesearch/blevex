@@ -50,9 +50,9 @@ install:
   - sudo make install
   # get and build rocksdb
   - cd
-  - curl -sLO https://github.com/facebook/rocksdb/archive/v5.8.tar.gz
-  - tar zxvf v5.8.tar.gz
-  - cd rocksdb-5.8
+  - curl -sLO https://github.com/facebook/rocksdb/archive/v5.10.3.tar.gz
+  - tar zxvf v5.10.3.tar.gz
+  - cd rocksdb-5.10.3
   - make shared_lib
   # fetch all necessary go deps
   - cd
