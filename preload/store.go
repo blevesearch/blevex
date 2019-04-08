@@ -12,6 +12,7 @@
 package preload
 
 import (
+	"bytes"
 	"compress/gzip"
 	"fmt"
 	"os"
@@ -52,6 +53,9 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 		o: kvs,
 	}
 
+	// common.Log.Info("preloadpath=%q", config["preloadpath"])
+	// panic(config["preloadpath"])
+
 	if preloadPath, ok := config["preloadpath"].(string); ok {
 		f, err := os.Open(preloadPath)
 		if err != nil {
@@ -73,6 +77,30 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	if preloadBytes, ok := config["preloadmem"].([]byte); ok {
+
+		// panic("FFF")
+
+		f := bytes.NewBuffer(preloadBytes)
+
+		gzr, err := gzip.NewReader(f)
+		if err != nil {
+			return nil, err
+		}
+		err = Import(rv, gzr, 1024)
+		if err != nil {
+			return nil, err
+		}
+		err = gzr.Close()
+		if err != nil {
+			return nil, err
+		}
+		// err = f.Close()
+		// if err != nil {
+		// 	return nil, err
+		// }
 	}
 
 	return rv, nil
