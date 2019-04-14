@@ -80,27 +80,12 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 	}
 
 	if preloadBytes, ok := config["preloadmem"].([]byte); ok {
-
 		// panic("FFF")
-
-		f := bytes.NewBuffer(preloadBytes)
-
-		gzr, err := gzip.NewReader(f)
+		b := bytes.NewBuffer(preloadBytes)
+		err := Import(rv, b, 1024)
 		if err != nil {
 			return nil, err
 		}
-		err = Import(rv, gzr, 1024)
-		if err != nil {
-			return nil, err
-		}
-		err = gzr.Close()
-		if err != nil {
-			return nil, err
-		}
-		// err = f.Close()
-		// if err != nil {
-		// 	return nil, err
-		// }
 	}
 
 	return rv, nil
