@@ -53,9 +53,6 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 		o: kvs,
 	}
 
-	// common.Log.Info("preloadpath=%q", config["preloadpath"])
-	// panic(config["preloadpath"])
-
 	if preloadPath, ok := config["preloadpath"].(string); ok {
 		f, err := os.Open(preloadPath)
 		if err != nil {
