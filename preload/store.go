@@ -77,7 +77,6 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 	}
 
 	if preloadBytes, ok := config["preloadmem"].([]byte); ok {
-		// panic("FFF")
 		b := bytes.NewBuffer(preloadBytes)
 		err := Import(rv, b, 1024)
 		if err != nil {
