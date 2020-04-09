@@ -10,9 +10,10 @@
 package detectlang
 
 import (
-	"github.com/abadojack/whatlanggo"
 	"github.com/blevesearch/bleve/analysis"
 	"github.com/blevesearch/bleve/registry"
+
+	"github.com/abadojack/whatlanggo"
 )
 
 const FilterName = "detect_lang"
