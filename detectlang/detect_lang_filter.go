@@ -10,10 +10,9 @@
 package detectlang
 
 import (
+	"github.com/abadojack/whatlanggo"
 	"github.com/blevesearch/bleve/analysis"
 	"github.com/blevesearch/bleve/registry"
-
-	"github.com/blevesearch/cld2"
 )
 
 const FilterName = "detect_lang"
@@ -30,7 +29,7 @@ func (f *DetectLangFilter) Filter(input analysis.TokenStream) analysis.TokenStre
 
 	offset := 0
 	for _, token := range input {
-		token.Term = []byte(cld2.Detect(string(token.Term)))
+		token.Term = []byte(whatlanggo.Detect(string(token.Term)).Lang.Iso6391())
 		token.Start = offset
 		token.End = token.Start + len(token.Term)
 		token.Type = analysis.AlphaNumeric
