@@ -20,97 +20,97 @@ func applyConfig(o *gorocksdb.Options, config map[string]interface{}) (
 		o.SetParanoidChecks(pc)
 	}
 
-	ill, ok := config["info_log_level"].(float64)
+	ill, ok := config["info_log_level"].(int)
 	if ok {
-		o.SetInfoLogLevel(gorocksdb.InfoLogLevel(int(ill)))
+		o.SetInfoLogLevel(gorocksdb.InfoLogLevel(uint(ill)))
 	}
 
-	tt, ok := config["total_threads"].(float64)
+	tt, ok := config["total_threads"].(int)
 	if ok {
-		o.IncreaseParallelism(int(tt))
+		o.IncreaseParallelism(tt)
 	}
 
-	ofpl, ok := config["optimize_for_point_lookup"].(float64)
+	ofpl, ok := config["optimize_for_point_lookup"].(int)
 	if ok {
 		o.OptimizeForPointLookup(uint64(ofpl))
 	}
 
-	olsc, ok := config["optimize_level_style_compaction"].(float64)
+	olsc, ok := config["optimize_level_style_compaction"].(int)
 	if ok {
 		o.OptimizeLevelStyleCompaction(uint64(olsc))
 	}
 
-	ousc, ok := config["optimize_universal_style_compaction"].(float64)
+	ousc, ok := config["optimize_universal_style_compaction"].(int)
 	if ok {
 		o.OptimizeUniversalStyleCompaction(uint64(ousc))
 	}
 
-	wbs, ok := config["write_buffer_size"].(float64)
+	wbs, ok := config["write_buffer_size"].(int)
 	if ok {
-		o.SetWriteBufferSize(int(wbs))
+		o.SetWriteBufferSize(wbs)
 	}
 
-	mwbn, ok := config["max_write_buffer_number"].(float64)
+	mwbn, ok := config["max_write_buffer_number"].(int)
 	if ok {
-		o.SetMaxWriteBufferNumber(int(mwbn))
+		o.SetMaxWriteBufferNumber(mwbn)
 	}
 
-	mwbntm, ok := config["min_write_buffer_number_to_merge"].(float64)
+	mwbntm, ok := config["min_write_buffer_number_to_merge"].(int)
 	if ok {
-		o.SetMinWriteBufferNumberToMerge(int(mwbntm))
+		o.SetMinWriteBufferNumberToMerge(mwbntm)
 	}
 
-	mof, ok := config["max_open_files"].(float64)
+	mof, ok := config["max_open_files"].(int)
 	if ok {
-		o.SetMaxOpenFiles(int(mof))
+		o.SetMaxOpenFiles(mof)
 	}
 
-	c, ok := config["compression"].(float64)
+	c, ok := config["compression"].(uint)
 	if ok {
-		o.SetCompression(gorocksdb.CompressionType(int(c)))
+		o.SetCompression(gorocksdb.CompressionType(c))
 	}
 
-	mltc, ok := config["min_level_to_compress"].(float64)
+	mltc, ok := config["min_level_to_compress"].(int)
 	if ok {
-		o.SetMinLevelToCompress(int(mltc))
+		o.SetMinLevelToCompress(mltc)
 	}
 
-	nl, ok := config["num_levels"].(float64)
+	nl, ok := config["num_levels"].(int)
 	if ok {
-		o.SetNumLevels(int(nl))
+		o.SetNumLevels(nl)
 	}
 
-	lfnct, ok := config["level0_file_num_compaction_trigger"].(float64)
+	lfnct, ok := config["level0_file_num_compaction_trigger"].(int)
 	if ok {
-		o.SetLevel0FileNumCompactionTrigger(int(lfnct))
+		o.SetLevel0FileNumCompactionTrigger(lfnct)
 	}
 
-	lswt, ok := config["level0_slowdown_writes_trigger"].(float64)
+	lswt, ok := config["level0_slowdown_writes_trigger"].(int)
 	if ok {
-		o.SetLevel0SlowdownWritesTrigger(int(lswt))
+		o.SetLevel0SlowdownWritesTrigger(lswt)
 	}
 
-	lstopwt, ok := config["level0_stop_writes_trigger"].(float64)
+	lstopwt, ok := config["level0_stop_writes_trigger"].(int)
 	if ok {
-		o.SetLevel0StopWritesTrigger(int(lstopwt))
+		o.SetLevel0StopWritesTrigger(lstopwt)
 	}
 
-	mmcl, ok := config["max_mem_compaction_level"].(float64)
+	mmcl, ok := config["max_mem_compaction_level"].(int)
 	if ok {
-		o.SetMaxMemCompactionLevel(int(mmcl))
+		o.SetMaxMemCompactionLevel(mmcl)
 	}
 
-	tfsb, ok := config["target_file_size_base"].(float64)
+	tfsb, ok := config["target_file_size_base"].(int)
 	if ok {
 		o.SetTargetFileSizeBase(uint64(tfsb))
 	}
 
-	tfsm, ok := config["target_file_size_multiplier"].(float64)
+	tfsm, ok := config["target_file_size_multiplier"].(int)
 	if ok {
-		o.SetTargetFileSizeMultiplier(int(tfsm))
+		o.SetTargetFileSizeMultiplier(tfsm)
 	}
 
-	mbflb, ok := config["max_bytes_for_level_base"].(float64)
+	mbflb, ok := config["max_bytes_for_level_base"].(int)
 	if ok {
 		o.SetMaxBytesForLevelBase(uint64(mbflb))
 	}
@@ -125,34 +125,34 @@ func applyConfig(o *gorocksdb.Options, config map[string]interface{}) (
 		o.SetUseFsync(uf)
 	}
 
-	dofpm, ok := config["delete_obsolete_files_period_micros"].(float64)
+	dofpm, ok := config["delete_obsolete_files_period_micros"].(int)
 	if ok {
 		o.SetDeleteObsoleteFilesPeriodMicros(uint64(dofpm))
 	}
 
-	mbc, ok := config["max_background_compactions"].(float64)
+	mbc, ok := config["max_background_compactions"].(int)
 	if ok {
-		o.SetMaxBackgroundCompactions(int(mbc))
+		o.SetMaxBackgroundCompactions(mbc)
 	}
 
-	mbf, ok := config["max_background_flushes"].(float64)
+	mbf, ok := config["max_background_flushes"].(int)
 	if ok {
-		o.SetMaxBackgroundFlushes(int(mbf))
+		o.SetMaxBackgroundFlushes(mbf)
 	}
 
-	mlfs, ok := config["max_log_file_size"].(float64)
+	mlfs, ok := config["max_log_file_size"].(int)
 	if ok {
-		o.SetMaxLogFileSize(int(mlfs))
+		o.SetMaxLogFileSize(mlfs)
 	}
 
-	lfttr, ok := config["log_file_time_to_roll"].(float64)
+	lfttr, ok := config["log_file_time_to_roll"].(int)
 	if ok {
-		o.SetLogFileTimeToRoll(int(lfttr))
+		o.SetLogFileTimeToRoll(lfttr)
 	}
 
-	klfn, ok := config["keep_log_file_num"].(float64)
+	klfn, ok := config["keep_log_file_num"].(int)
 	if ok {
-		o.SetKeepLogFileNum(int(klfn))
+		o.SetKeepLogFileNum(klfn)
 	}
 
 	hrl, ok := config["hard_rate_limit"].(float64)
@@ -160,29 +160,29 @@ func applyConfig(o *gorocksdb.Options, config map[string]interface{}) (
 		o.SetHardRateLimit(hrl)
 	}
 
-	rldmm, ok := config["rate_limit_delay_max_millisecond"].(float64)
+	rldmm, ok := config["rate_limit_delay_max_millisecond"].(int)
 	if ok {
 		o.SetRateLimitDelayMaxMilliseconds(uint(rldmm))
 	}
 
-	mmfs, ok := config["max_manifest_file_size"].(float64)
+	mmfs, ok := config["max_manifest_file_size"].(int)
 	if ok {
 		o.SetMaxManifestFileSize(uint64(mmfs))
 	}
 
-	tcnsb, ok := config["table_cache_numshardbits"].(float64)
+	tcnsb, ok := config["table_cache_numshardbits"].(int)
 	if ok {
-		o.SetTableCacheNumshardbits(int(tcnsb))
+		o.SetTableCacheNumshardbits(tcnsb)
 	}
 
-	tcrscl, ok := config["table_cache_remove_scan_count_limit"].(float64)
+	tcrscl, ok := config["table_cache_remove_scan_count_limit"].(int)
 	if ok {
-		o.SetTableCacheRemoveScanCountLimit(int(tcrscl))
+		o.SetTableCacheRemoveScanCountLimit(tcrscl)
 	}
 
-	abs, ok := config["arena_block_size"].(float64)
+	abs, ok := config["arena_block_size"].(int)
 	if ok {
-		o.SetArenaBlockSize(int(abs))
+		o.SetArenaBlockSize(abs)
 	}
 
 	dac, ok := config["disable_auto_compactions"].(bool)
@@ -190,19 +190,19 @@ func applyConfig(o *gorocksdb.Options, config map[string]interface{}) (
 		o.SetDisableAutoCompactions(dac)
 	}
 
-	wts, ok := config["WAL_ttl_seconds"].(float64)
+	wts, ok := config["WAL_ttl_seconds"].(int)
 	if ok {
 		o.SetWALTtlSeconds(uint64(wts))
 	}
 
-	wslm, ok := config["WAL_size_limit_MB"].(float64)
+	wslm, ok := config["WAL_size_limit_MB"].(int)
 	if ok {
 		o.SetWalSizeLimitMb(uint64(wslm))
 	}
 
-	mps, ok := config["manifest_preallocation_size"].(float64)
+	mps, ok := config["manifest_preallocation_size"].(int)
 	if ok {
-		o.SetManifestPreallocationSize(int(mps))
+		o.SetManifestPreallocationSize(mps)
 	}
 
 	prkwf, ok := config["purge_redundant_kvs_while_flush"].(bool)
@@ -225,7 +225,7 @@ func applyConfig(o *gorocksdb.Options, config map[string]interface{}) (
 		o.SetSkipLogErrorOnRecovery(sleor)
 	}
 
-	sdps, ok := config["stats_dump_period_sec"].(float64)
+	sdps, ok := config["stats_dump_period_sec"].(int)
 	if ok {
 		o.SetStatsDumpPeriodSec(uint(sdps))
 	}
@@ -235,7 +235,7 @@ func applyConfig(o *gorocksdb.Options, config map[string]interface{}) (
 		o.SetAdviseRandomOnOpen(aroo)
 	}
 
-	ahocs, ok := config["access_hint_on_compaction_start"].(float64)
+	ahocs, ok := config["access_hint_on_compaction_start"].(int)
 	if ok {
 		o.SetAccessHintOnCompactionStart(gorocksdb.CompactionAccessPattern(uint(ahocs)))
 	}
@@ -245,17 +245,17 @@ func applyConfig(o *gorocksdb.Options, config map[string]interface{}) (
 		o.SetUseAdaptiveMutex(uam)
 	}
 
-	bps, ok := config["bytes_per_sync"].(float64)
+	bps, ok := config["bytes_per_sync"].(int)
 	if ok {
 		o.SetBytesPerSync(uint64(bps))
 	}
 
-	cs, ok := config["compaction_style"].(float64)
+	cs, ok := config["compaction_style"].(int)
 	if ok {
 		o.SetCompactionStyle(gorocksdb.CompactionStyle(uint(cs)))
 	}
 
-	mssii, ok := config["max_sequential_skip_in_iterations"].(float64)
+	mssii, ok := config["max_sequential_skip_in_iterations"].(int)
 	if ok {
 		o.SetMaxSequentialSkipInIterations(uint64(mssii))
 	}
@@ -265,9 +265,9 @@ func applyConfig(o *gorocksdb.Options, config map[string]interface{}) (
 		o.SetInplaceUpdateSupport(ius)
 	}
 
-	iunl, ok := config["inplace_update_num_locks"].(float64)
+	iunl, ok := config["inplace_update_num_locks"].(int)
 	if ok {
-		o.SetInplaceUpdateNumLocks(int(iunl))
+		o.SetInplaceUpdateNumLocks(iunl)
 	}
 
 	es, ok := config["enable_statistics"].(bool)
@@ -283,15 +283,15 @@ func applyConfig(o *gorocksdb.Options, config map[string]interface{}) (
 	// options in the block based table options object
 	bbto := gorocksdb.NewDefaultBlockBasedTableOptions()
 
-	lcc, ok := config["lru_cache_capacity"].(float64)
+	lcc, ok := config["lru_cache_capacity"].(int)
 	if ok {
-		c := gorocksdb.NewLRUCache(int(lcc))
+		c := gorocksdb.NewLRUCache(lcc)
 		bbto.SetBlockCache(c)
 	}
 
-	bfbpk, ok := config["bloom_filter_bits_per_key"].(float64)
+	bfbpk, ok := config["bloom_filter_bits_per_key"].(int)
 	if ok {
-		bf := gorocksdb.NewBloomFilter(int(bfbpk))
+		bf := gorocksdb.NewBloomFilter(bfbpk)
 		bbto.SetFilterPolicy(bf)
 	}
 
