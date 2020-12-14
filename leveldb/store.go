@@ -14,7 +14,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/blevesearch/bleve/index/store"
+	store "github.com/blevesearch/upsidedown_store_api"
 	"github.com/blevesearch/bleve/registry"
 	"github.com/jmhodges/levigo"
 )

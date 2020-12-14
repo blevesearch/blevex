@@ -13,8 +13,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/blevesearch/bleve/index/store"
-	"github.com/blevesearch/bleve/index/store/test"
+	store "github.com/blevesearch/upsidedown_store_api"
+	"github.com/blevesearch/upsidedown_store_api/test"
 )
 
 func open(t *testing.T, mo store.MergeOperator) store.KVStore {

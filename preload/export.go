@@ -11,9 +11,10 @@ package preload
 
 import (
 	"fmt"
+	"github.com/blevesearch/bleve/index/upsidedown"
 	"io"
 
-	"github.com/blevesearch/bleve/index"
+	index "github.com/blevesearch/bleve_index_api"
 )
 
 // ExportBleve will dump all the index rows from
@@ -27,12 +28,17 @@ func ExportBleve(i index.Index, w io.Writer) error {
 		return fmt.Errorf("error getting reader: %v", err)
 	}
 
+	upsideDownReader, ok := r.(*upsidedown.IndexReader)
+	if !ok {
+		return fmt.Errorf("dump is only supported by index type upsidedown")
+	}
+
 	var dumpChan chan interface{}
-	dumpChan = r.DumpAll()
+	dumpChan = upsideDownReader.DumpAll()
 
 	for dumpValue := range dumpChan {
 		switch dumpValue := dumpValue.(type) {
-		case index.IndexRow:
+		case upsidedown.IndexRow:
 			p := KVPair{K: dumpValue.Key(), V: dumpValue.Value()}
 			err = kvpw.Write(&p)
 			if err != nil {

@@ -11,7 +11,9 @@
 
 package cznicb
 
-import "github.com/blevesearch/bleve/index/store"
+import (
+	store "github.com/blevesearch/upsidedown_store_api"
+)
 
 type Reader struct {
 	s *Store
