@@ -37,7 +37,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("error opening export path: %v", err)
 	}
-	ii, _, err := i.Advanced()
+	ii, err := i.Advanced()
 	if err != nil {
 		log.Fatalf("error getting internal index: %v", err)
 	}
