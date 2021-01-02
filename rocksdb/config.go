@@ -285,7 +285,7 @@ func applyConfig(o *gorocksdb.Options, config map[string]interface{}) (
 
 	lcc, ok := config["lru_cache_capacity"].(float64)
 	if ok {
-		c := gorocksdb.NewLRUCache(int(lcc))
+		c := gorocksdb.NewLRUCache(uint64(lcc))
 		bbto.SetBlockCache(c)
 	}
 
