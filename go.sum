@@ -6,6 +6,8 @@ github.com/blevesearch/bleve v1.0.14 h1:Q8r+fHTt35jtGXJUM0ULwM3Tzg+MRfyai4ZkWDy2
 github.com/blevesearch/bleve v1.0.14/go.mod h1:e/LJTr+E7EaoVdkQZTfoz7dt4KoDNvDbLb8MSKuNTLQ=
 github.com/blevesearch/bleve_index_api v0.0.4 h1:v+rdWIJ/wmVL81rW0G5cRdIO/Cjbd9NOsmuB0OIbaLs=
 github.com/blevesearch/bleve_index_api v0.0.4/go.mod h1:yq9YIbuvEQdUB0h+UiLbpDdLLnvcD5ZkqO0LS1wuSvY=
+github.com/blevesearch/bleve_index_api v0.0.8 h1:X6kPt4vI4Ohk0GFYVuDOD/QeoF9ioM+RGYh7LHRHcvI=
+github.com/blevesearch/bleve_index_api v0.0.8/go.mod h1:yq9YIbuvEQdUB0h+UiLbpDdLLnvcD5ZkqO0LS1wuSvY=
 github.com/blevesearch/blevex v0.0.0-20190916190636-152f0fe5c040/go.mod h1:WH+MU2F4T0VmSdaPX+Wu5GYoZBrYWdOZWSjzvYcDmqQ=
 github.com/blevesearch/blevex v1.0.0/go.mod h1:2rNVqoG2BZI8t1/P1awgTKnGlx5MP9ZbtEciQaNhswc=
 github.com/blevesearch/cld2 v0.0.0-20200327141045-8b5f551d37f5 h1:/4ikScMMYMqsRFWJjCyzd3CNWB0lxvqDkqa5nEv6NMc=
