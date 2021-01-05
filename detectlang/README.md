@@ -2,7 +2,7 @@
 
 ## detect_lang token filter
 
-A bleve token filter which passes the text of each token and passes it to the cld2 library.  The library determines what it thinks the language most likely is.  The ISO-639 language code replaces the token term.
+A bleve token filter which passes the text of each token and passes it to the [whatlanggo](https://github.com/abadojack/whatlanggo) library.  The library determines what it thinks the language most likely is.  The ISO-639 language code replaces the token term.
 
 ## detect_lang analyzer
 
@@ -12,4 +12,4 @@ When you configure a field to use this analyzer, the effect will be to index a s
 
 ### Dependency
 
-This language uses a [Go wrapper](https://github.com/blevesearch/cld2) around [CLD2](https://github.com/CLD2Owners/cld2).  The wrapper includes the C++ source directly so previous complications around static vs dynamic linking have gone away.
+This language uses a [whatlanggo](https://github.com/abadojack/whatlanggo).
