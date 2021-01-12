@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/v2"
 )
 
 // NOTE As this approach uses carefully orchestrated interactions

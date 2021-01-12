@@ -13,8 +13,8 @@ import (
 	"fmt"
 
 	"github.com/tebeka/snowball"
-	"github.com/blevesearch/bleve/analysis"
-	"github.com/blevesearch/bleve/registry"
+	"github.com/blevesearch/bleve/v2/analysis"
+	"github.com/blevesearch/bleve/v2/registry"
 )
 
 const Name = "stem"

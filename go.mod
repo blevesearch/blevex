@@ -1,10 +1,11 @@
-module github.com/blevesearch/blevex
+module github.com/blevesearch/blevex/v2
 
-go 1.15
+go 1.13
 
 require (
-	github.com/blevesearch/bleve v1.0.14
-	github.com/blevesearch/cld2 v0.0.0-20200327141045-8b5f551d37f5
+	github.com/blevesearch/bleve/v2 v2.0.0
+	github.com/blevesearch/bleve_index_api v1.0.0
+	github.com/blevesearch/upsidedown_store_api v1.0.1
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
 	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect

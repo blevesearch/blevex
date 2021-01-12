@@ -13,8 +13,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/blevesearch/bleve/index/store"
-	"github.com/blevesearch/bleve/registry"
+	store "github.com/blevesearch/upsidedown_store_api"
+	"github.com/blevesearch/bleve/v2/registry"
 	"github.com/tecbot/gorocksdb"
 )
 

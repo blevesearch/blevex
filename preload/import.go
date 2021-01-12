@@ -12,7 +12,7 @@ package preload
 import (
 	"io"
 
-	"github.com/blevesearch/bleve/index/store"
+	store "github.com/blevesearch/upsidedown_store_api"
 )
 
 // Import reads KVPairs from the Reader
