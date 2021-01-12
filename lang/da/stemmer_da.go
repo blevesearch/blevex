@@ -12,7 +12,7 @@ package da
 import (
 	"github.com/blevesearch/bleve/v2/analysis"
 	"github.com/blevesearch/bleve/v2/registry"
-	"github.com/blevesearch/blevex/stemmer"
+	"github.com/blevesearch/blevex/v2/stemmer"
 )
 
 const StemmerName = "stemmer_da"

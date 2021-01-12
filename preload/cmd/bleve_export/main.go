@@ -16,7 +16,7 @@ import (
 	"os"
 
 	"github.com/blevesearch/bleve/v2"
-	"github.com/blevesearch/blevex/preload"
+	"github.com/blevesearch/blevex/v2/preload"
 
 	_ "github.com/blevesearch/bleve/v2/config"
 )
