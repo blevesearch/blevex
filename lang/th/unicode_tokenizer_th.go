@@ -12,7 +12,7 @@ package th
 import (
 	"github.com/blevesearch/bleve/v2/analysis"
 	"github.com/blevesearch/bleve/v2/registry"
-	"github.com/blevesearch/blevex/icu"
+	"github.com/blevesearch/blevex/v2/icu"
 )
 
 const TokenizerName = "icu_th"

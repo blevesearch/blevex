@@ -1,4 +1,4 @@
-module github.com/blevesearch/blevex
+module github.com/blevesearch/blevex/v2
 
 go 1.13
 
