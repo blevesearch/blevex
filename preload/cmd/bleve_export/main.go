@@ -15,10 +15,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/blevex/preload"
 
-	_ "github.com/blevesearch/bleve/config"
+	_ "github.com/blevesearch/bleve/v2/config"
 )
 
 func main() {

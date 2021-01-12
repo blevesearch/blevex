@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/v2"
 )
 
 func TestIndexBatcherConcurrentCrud(t *testing.T) {

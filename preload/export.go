@@ -11,7 +11,7 @@ package preload
 
 import (
 	"fmt"
-	"github.com/blevesearch/bleve/index/upsidedown"
+	"github.com/blevesearch/bleve/v2/index/upsidedown"
 	"io"
 
 	index "github.com/blevesearch/bleve_index_api"
