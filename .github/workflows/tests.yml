@@ -14,7 +14,7 @@ jobs:
     steps:
     - name: Install Dependencies
       run: |
-        sudo apt-get install libicu-dev libleveldb-dev librocksdb-dev libsnappy1v5 liblz4-1 libzstd1
+        sudo apt-get install libicu-dev libleveldb-dev librocksdb-dev
     - name: Install Go
       uses: actions/setup-go@v1
       with:
@@ -25,4 +25,4 @@ jobs:
       run: |
         go version
         go env
-        CGO_LDFLAGS="-lrocksdb -lstdc++ -lm -lz -lbz2 -lsnappy1v5 -llz4-1 -lzstd-1" go test ./...
+        CGO_LDFLAGS="-lrocksdb -lstdc++ -lm" go test ./...
