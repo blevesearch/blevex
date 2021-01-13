@@ -24,5 +24,4 @@ jobs:
     - name: Test
       run: |
         go version
-        go env
-        CGO_LDFLAGS="-lrocksdb -lstdc++ -lm" go test ./...
+        CGO_LDFLAGS="-lrocksdb" go test -race ./...
