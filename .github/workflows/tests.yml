@@ -15,7 +15,6 @@ jobs:
     - name: Install Dependencies
       run: |
         sudo apt-get install libicu-dev libleveldb-dev librocksdb-dev
-        dpkg -L librocksdb-dev
     - name: Install Go
       uses: actions/setup-go@v1
       with:
@@ -25,4 +24,5 @@ jobs:
     - name: Test
       run: |
         go version
+        go env
         CGO_LDFLAGS=-lrocksdb go test ./...
