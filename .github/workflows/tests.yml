@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         go-version: [1.14.x, 1.15.x]
-        platform: [ubuntu-latest]
+        platform: [ubuntu-20.04]
     runs-on: ${{ matrix.platform }}
     steps:
     - name: Install Dependencies
