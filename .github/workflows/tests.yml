@@ -13,7 +13,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
     - name: Install Dependencies
-      run: apt-get install libicu-dev libleveldb-dev librocksdb-dev
+      run: sudo apt-get install libicu-dev libleveldb-dev librocksdb-dev
     - name: Install Go
       uses: actions/setup-go@v1
       with:
