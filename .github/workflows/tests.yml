@@ -14,7 +14,7 @@ jobs:
     steps:
     - name: Install Dependencies
       run: |
-        sudo apt-get install libicu-dev libleveldb-dev librocksdb-dev
+        sudo apt-get install libicu-dev libleveldb-dev librocksdb-dev libsnappy1v5 liblz4-1 libzstd1
     - name: Install Go
       uses: actions/setup-go@v1
       with:
