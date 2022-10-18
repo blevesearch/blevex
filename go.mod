@@ -3,7 +3,7 @@ module github.com/blevesearch/blevex/v2
 go 1.18
 
 require (
-	github.com/blevesearch/bleve/v2 v2.3.4
+	github.com/blevesearch/bleve/v2 v2.3.5-0.20221018215002-bc7a7b554a42
 	github.com/blevesearch/bleve_index_api v1.0.3
 	github.com/blevesearch/upsidedown_store_api v1.0.1
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d
@@ -17,7 +17,7 @@ require (
 require (
 	github.com/RoaringBitmap/roaring v0.9.4 // indirect
 	github.com/bits-and-blooms/bitset v1.2.0 // indirect
-	github.com/blevesearch/geo v0.1.13 // indirect
+	github.com/blevesearch/geo v0.1.15 // indirect
 	github.com/blevesearch/go-porterstemmer v1.0.3 // indirect
 	github.com/blevesearch/goleveldb v1.0.1 // indirect
 	github.com/blevesearch/gtreap v0.1.1 // indirect
