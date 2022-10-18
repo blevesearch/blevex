@@ -17,7 +17,7 @@ import (
 
 const AnalyzerName = "ja"
 
-func AnalyzerConstructor(config map[string]interface{}, cache *registry.Cache) (*analysis.Analyzer, error) {
+func AnalyzerConstructor(config map[string]interface{}, cache *registry.Cache) (analysis.Analyzer, error) {
 	kagomeTokenizer, err := cache.TokenizerNamed(TokenizerName)
 	if err != nil {
 		return nil, err
