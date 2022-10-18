@@ -30,7 +30,7 @@ func AnalyzerConstructor(config map[string]interface{}, cache *registry.Cache) (
 	if err != nil {
 		return nil, err
 	}
-	rv := analysis.Analyzer{
+	rv := analysis.DefaultAnalyzer{
 		Tokenizer: unicodeTokenizer,
 		TokenFilters: []analysis.TokenFilter{
 			toLowerFilter,

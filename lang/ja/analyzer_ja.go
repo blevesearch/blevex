@@ -23,7 +23,7 @@ func AnalyzerConstructor(config map[string]interface{}, cache *registry.Cache) (
 		return nil, err
 	}
 	normalizeFilter := unicodenorm.MustNewUnicodeNormalizeFilter(unicodenorm.NFKD)
-	rv := analysis.Analyzer{
+	rv := analysis.DefaultAnalyzer{
 		Tokenizer: kagomeTokenizer,
 		TokenFilters: []analysis.TokenFilter{
 			normalizeFilter,
