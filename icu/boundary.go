@@ -10,6 +10,8 @@
 package icu
 
 // #cgo LDFLAGS: -licuuc -licudata
+// #cgo darwin LDFLAGS: -L/usr/local/opt/icu4c/lib
+// #cgo darwin CPPFLAGS: -I/usr/local/opt/icu4c/include
 // #include <stdio.h>
 // #include <stdlib.h>
 // #include "unicode/utypes.h"
