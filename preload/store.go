@@ -12,6 +12,7 @@
 package preload
 
 import (
+	"bytes"
 	"compress/gzip"
 	"fmt"
 	"os"
@@ -70,6 +71,14 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 			return nil, err
 		}
 		err = f.Close()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if preloadBytes, ok := config["preloadmem"].([]byte); ok {
+		b := bytes.NewBuffer(preloadBytes)
+		err := Import(rv, b, 1024)
 		if err != nil {
 			return nil, err
 		}
