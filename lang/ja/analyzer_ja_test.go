@@ -28,14 +28,14 @@ func TestJaAnalyzer(t *testing.T) {
 				&analysis.Token{
 					Term:     []byte("こんにちは"),
 					Type:     analysis.Ideographic,
-					Position: 1,
+					Position: 0,
 					Start:    0,
 					End:      15,
 				},
 				&analysis.Token{
 					Term:     []byte("世界"),
 					Type:     analysis.Ideographic,
-					Position: 2,
+					Position: 1,
 					Start:    15,
 					End:      21,
 				},
@@ -47,7 +47,7 @@ func TestJaAnalyzer(t *testing.T) {
 				&analysis.Token{
 					Term:     []byte("カタカナ"),
 					Type:     analysis.Ideographic,
-					Position: 1,
+					Position: 0,
 					Start:    0,
 					End:      12,
 				},

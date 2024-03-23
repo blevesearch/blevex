@@ -10,72 +10,64 @@
 package ja
 
 import (
+	"fmt"
+
 	"github.com/blevesearch/bleve/v2/analysis"
 	"github.com/blevesearch/bleve/v2/registry"
+	"github.com/ikawaha/kagome-dict/dict"
 
-	"github.com/ikawaha/kagome.ipadic/tokenizer"
+	"github.com/ikawaha/kagome-dict/ipa"
+	"github.com/ikawaha/kagome/v2/tokenizer"
 )
 
 const TokenizerName = "kagome"
 
 type KagomeMorphTokenizer struct {
-	tok tokenizer.Tokenizer
+	tok *tokenizer.Tokenizer
 }
 
-func init() {
-	_ = tokenizer.SysDic() // prepare system dictionary
-}
+var defaultSystemDict = ipa.DictShrink()
 
-func NewKagomeMorphTokenizer() *KagomeMorphTokenizer {
-	return &KagomeMorphTokenizer{
-		tok: tokenizer.New(),
+func NewKagomeMorphTokenizer() (*KagomeMorphTokenizer, error) {
+	t, err := tokenizer.New(defaultSystemDict, tokenizer.OmitBosEos())
+	if err != nil {
+		return nil, fmt.Errorf("failed to create kagome tokenizer: %v", err)
 	}
+	return &KagomeMorphTokenizer{
+		tok: t,
+	}, nil
 }
 
-func NewKagomeMorphTokenizerWithUserDic(userdic tokenizer.UserDic) *KagomeMorphTokenizer {
-	k := tokenizer.New()
-	k.SetUserDic(userdic)
-	return &KagomeMorphTokenizer{
-		tok: k,
+func NewKagomeMorphTokenizerWithUserDic(user *dict.UserDict) (*KagomeMorphTokenizer, error) {
+	t, err := tokenizer.New(defaultSystemDict, tokenizer.UserDict(user), tokenizer.OmitBosEos())
+	if err != nil {
+		return nil, fmt.Errorf("failed to create kagome tokenizer: %v", err)
 	}
+	return &KagomeMorphTokenizer{
+		tok: t,
+	}, nil
 }
 
 func (t *KagomeMorphTokenizer) Tokenize(input []byte) analysis.TokenStream {
-	var (
-		morphs    []tokenizer.Token
-		prevstart int
-	)
-
-	rv := make(analysis.TokenStream, 0, len(input))
 	if len(input) < 1 {
-		return rv
+		return analysis.TokenStream{}
 	}
-
-	morphs = t.tok.Analyze(string(input), tokenizer.Search)
-
+	morphs := t.tok.Analyze(string(input), tokenizer.Search)
+	ret := make(analysis.TokenStream, len(morphs))
 	for i, m := range morphs {
-		if m.Surface == "EOS" || m.Surface == "BOS" {
-			continue
-		}
-
-		surfacelen := len(m.Surface)
-		token := &analysis.Token{
+		ret[i] = &analysis.Token{
 			Term:     []byte(m.Surface),
 			Position: i,
-			Start:    prevstart,
-			End:      prevstart + surfacelen,
+			Start:    m.Position,
+			End:      m.Position + len(m.Surface),
 			Type:     analysis.Ideographic,
 		}
-
-		prevstart = prevstart + surfacelen
-		rv = append(rv, token)
 	}
-
-	return rv
+	return ret
 }
 
 func KagomeMorphTokenizerConstructor(config map[string]interface{}, cache *registry.Cache) (analysis.Tokenizer, error) {
-	return NewKagomeMorphTokenizer(), nil
+	return NewKagomeMorphTokenizer()
 }
 
 func init() {

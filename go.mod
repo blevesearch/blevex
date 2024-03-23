@@ -8,7 +8,9 @@ require (
 	github.com/blevesearch/upsidedown_store_api v1.0.2
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d
 	github.com/golang/protobuf v1.3.2
-	github.com/ikawaha/kagome.ipadic v1.1.2
+	github.com/ikawaha/kagome-dict v1.0.9
+	github.com/ikawaha/kagome-dict/ipa v1.0.10
+	github.com/ikawaha/kagome/v2 v2.9.5
 	github.com/jmhodges/levigo v1.0.0
 	github.com/tebeka/snowball v0.4.2
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c

@@ -23,53 +23,56 @@ func TestKagome(t *testing.T) {
 		output analysis.TokenStream
 	}{
 		{
-			[]byte("こんにちは世界"),
-			analysis.TokenStream{
+			input: []byte("こんにちは世界"),
+			output: analysis.TokenStream{
 				{
 					Start:    0,
 					End:      15,
 					Term:     []byte("こんにちは"),
-					Position: 1,
+					Position: 0,
 					Type:     analysis.Ideographic,
 				},
 				{
 					Start:    15,
 					End:      21,
 					Term:     []byte("世界"),
-					Position: 2,
+					Position: 1,
 					Type:     analysis.Ideographic,
 				},
 			},
 		},
 		{
-			[]byte("関西国際空港"),
-			analysis.TokenStream{
+			input: []byte("関西国際空港"),
+			output: analysis.TokenStream{
 				{
 					Start:    0,
 					End:      6,
 					Term:     []byte("関西"),
-					Position: 1,
+					Position: 0,
 					Type:     analysis.Ideographic,
 				},
 				{
 					Start:    6,
 					End:      12,
 					Term:     []byte("国際"),
-					Position: 2,
+					Position: 1,
 					Type:     analysis.Ideographic,
 				},
 				{
 					Start:    12,
 					End:      18,
 					Term:     []byte("空港"),
-					Position: 3,
+					Position: 2,
 					Type:     analysis.Ideographic,
 				},
 			},
 		},
 	}
 
-	tokenizer := NewKagomeMorphTokenizer()
+	tokenizer, err := NewKagomeMorphTokenizer()
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, test := range tests {
 		actuals := tokenizer.Tokenize(test.input)
 
